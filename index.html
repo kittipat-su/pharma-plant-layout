@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pharma Plant Layout Builder — วางผังโรงงานยาตาม GMP/PIC/S</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%229%22%20fill%3D%22%232f6fe0%22/%3E%3Crect%20x%3D%229.5%22%20y%3D%2210.5%22%20width%3D%2210%22%20height%3D%229%22%20rx%3D%221.5%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.3%22/%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Crect%20x%3D%229.5%22%20y%3D%2210.5%22%20width%3D%2221%22%20height%3D%2219%22%20rx%3D%222.5%22/%3E%3Cline%20x1%3D%2219.5%22%20y1%3D%2210.5%22%20x2%3D%2219.5%22%20y2%3D%2229.5%22/%3E%3Cline%20x1%3D%229.5%22%20y1%3D%2220%22%20x2%3D%2230.5%22%20y2%3D%2220%22/%3E%3C/g%3E%3Ccircle%20cx%3D%2214.5%22%20cy%3D%2215%22%20r%3D%221.7%22%20fill%3D%22%238fe6b6%22/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#eef1f6; --panel:#ffffff; --panel2:#f2f5fa; --line:#dbe2ec;
@@ -19,10 +20,25 @@
   button{font-family:inherit;cursor:pointer;border:none;border-radius:8px}
   .app{display:grid;grid-template-columns:272px 1fr 328px;grid-template-rows:54px 1fr 176px;height:100vh}
   header{grid-column:1/4;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:0 18px;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
-  header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.2px}
+  header h1{font-size:15px;margin:0;font-weight:800;letter-spacing:-.01em;line-height:1.1}
   header .sub{font-size:11px;color:var(--muted)}
   header .spacer{flex:1}
+  .brand{display:flex;align-items:center;gap:11px}
+  .logo{width:38px;height:38px;line-height:0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(28,40,54,.2)}
+  .logo svg{width:100%;height:100%;display:block}
+  .brand-tag{font-size:9.5px;color:var(--muted);font-weight:700;letter-spacing:.09em;text-transform:uppercase}
   .hdr-ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fld{display:flex;flex-direction:column;gap:2px;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .fld select{text-transform:none;font-weight:400}
+  /* segmented control group */
+  .seg{display:flex;align-items:center;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:3px;box-shadow:var(--shadow)}
+  .seg .btn,.seg .toggle{border:1px solid transparent;box-shadow:none;background:transparent;border-radius:7px}
+  .seg .btn:hover,.seg .toggle:hover{background:#eef3fb;border-color:transparent}
+  .seg .btn.primary{background:var(--accent);color:#fff}
+  .tglabel{font-size:9px;color:var(--muted);font-weight:800;letter-spacing:.7px;text-transform:uppercase;padding:0 7px 0 5px;white-space:nowrap}
+  .iconbtn{min-width:34px;padding:6px 9px;font-size:15px;line-height:1;text-align:center}
+  .divider{width:1px;align-self:stretch;min-height:24px;background:var(--line);margin:0 2px}
+  .grow{flex:1}
   select,.btn{background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:7px 11px;border-radius:8px;font-size:12.5px}
   .btn{box-shadow:var(--shadow)}
   .btn:hover{background:#eef3fb;border-color:#c3d2e6}
@@ -45,7 +61,8 @@
   .step.done .num{background:var(--ok);color:#fff}
   .step.done .num::before{content:"✓"}
   .step .t{font-size:12.5px;line-height:1.4}
-  .sech{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;margin:4px 0 8px}
+  .sech{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin:6px 0 9px;display:flex;align-items:center;gap:9px}
+  .sech::after{content:"";flex:1;height:1px;background:var(--line)}
   .palette{display:flex;flex-wrap:wrap;gap:6px}
   .chip{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:12px;background:var(--panel);border:1px solid var(--line);color:var(--ink);box-shadow:var(--shadow)}
   .chip:hover{background:#eef3fb;border-color:#b9cbe6}
@@ -54,9 +71,10 @@
   .grp{margin-bottom:10px}
   /* CENTER */
   .center{position:relative;background:#e7ecf3;overflow:auto;overscroll-behavior:contain}
-  .toolbar{position:sticky;top:0;z-index:6;display:flex;gap:8px;align-items:center;padding:9px 12px;background:#ffffffee;border-bottom:1px solid var(--line);backdrop-filter:blur(6px);flex-wrap:wrap}
-  .toggle{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 9px;border-radius:7px;background:var(--panel);border:1px solid var(--line);cursor:pointer}
+  .toolbar{position:sticky;top:0;z-index:6;display:flex;gap:7px;align-items:center;padding:9px 12px;background:#ffffffe6;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);flex-wrap:wrap}
+  .toggle{display:flex;align-items:center;gap:5px;font-size:11.5px;padding:5px 8px;border-radius:7px;background:var(--panel);border:1px solid var(--line);cursor:pointer}
   .toggle input{accent-color:var(--accent)}
+  .toggle:has(input:checked){background:#eaf1fc;box-shadow:inset 0 0 0 1px var(--accent)}
   .zoomctl{display:flex;gap:2px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px;box-shadow:var(--shadow)}
   .zbtn{padding:4px 8px;min-width:30px;box-shadow:none;border:1px solid transparent;background:transparent;font-size:14px;line-height:1}
   .zbtn:hover{background:#e9f0fa;border-color:transparent}
@@ -79,10 +97,18 @@
   .room.sel{outline:2.5px solid var(--accent);outline-offset:1px;box-shadow:0 0 0 4px rgba(47,111,224,.24),0 4px 14px rgba(28,40,54,.2);z-index:5}
   .room:focus-visible{outline:3px solid var(--accent2);outline-offset:2px;z-index:6}
   .room.bad{border-color:var(--err)!important;box-shadow:0 0 0 2px var(--err),0 2px 8px rgba(28,40,54,.14)}
+  .room .pbadge{position:absolute;bottom:2px;left:3px;font-size:8.5px;font-weight:800;padding:0 4px;border-radius:6px;line-height:1.35}
+  .room .pbadge.pos{background:#d5ead8;color:#1c6b43}
+  .room .pbadge.neg{background:#e4ddf4;color:#5a3fa0}
+  .room.overlay{z-index:6;border-style:dashed;border-width:2px;box-shadow:0 2px 10px rgba(28,40,54,.3)}
+  .doorsvg{position:absolute;inset:0;pointer-events:none;z-index:8;overflow:visible}
+  .door .doorhit{pointer-events:none}
+  .floor.doormode .door{cursor:pointer}
+  .floor.doormode .door .doorhit{pointer-events:stroke}
   .svgflow{position:absolute;inset:0;pointer-events:none;z-index:4}
   /* RIGHT */
   .right{background:var(--panel);border-left:1px solid var(--line)}
-  .score{display:flex;align-items:center;gap:14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .score{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,#ffffff,#f6faff);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:14px;box-shadow:var(--shadow)}
   .gauge{--v:0;width:66px;height:66px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;
     background:conic-gradient(var(--ok) calc(var(--v)*1%),#e3e9f2 0)}
   .gauge span{width:52px;height:52px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--ink)}
@@ -132,6 +158,31 @@
   .sm-rooms .rchip.placed{opacity:.5}
   .sm-rooms .rchip .dot{width:10px;height:10px;border-radius:3px;flex:none}
   .sm-actions{margin-top:20px;display:flex;justify-content:flex-end}
+  .modal-wide{max-width:820px}
+  /* room-data inspector */
+  #inspector{margin-bottom:14px}
+  .insp-empty{font-size:11.5px;color:var(--muted);background:var(--panel2);border:1px dashed var(--line);border-radius:9px;padding:10px;line-height:1.5}
+  .insp-head{font-size:13px;font-weight:700;margin-bottom:8px}
+  .insp-head small{color:var(--muted);font-weight:400}
+  .insp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .insp-f{display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .insp-f input,.insp-f select{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12.5px;color:var(--ink);text-transform:none}
+  .insp-chk{flex-direction:row;align-items:center;gap:6px}
+  .insp-chk input{width:auto}
+  /* schedule table */
+  .sched-wrap{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:8px}
+  table.sched{border-collapse:collapse;font-size:11.5px;width:100%;font-variant-numeric:tabular-nums}
+  table.sched th,table.sched td{border:1px solid var(--line);padding:4px 7px;text-align:center;white-space:nowrap}
+  table.sched th{background:var(--panel2);position:sticky;top:0}
+  table.sched td:first-child,table.sched th:first-child{text-align:left}
+  /* F-D3-81 checklist rows */
+  .fd-row{display:flex;gap:9px;align-items:flex-start;padding:8px 4px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.45}
+  .fd-row:last-child{border-bottom:none}
+  .fd-note{font-size:11px;color:var(--muted);margin-top:2px}
+  .fd-ic{width:18px;height:18px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+  .fd-ic.ok{background:var(--ok)} .fd-ic.wa{background:var(--warn)} .fd-ic.er{background:var(--err)} .fd-ic.na{background:var(--na)}
+  .printonly{display:none}
+  @media print{.printonly{display:block;padding:14px}.printonly h3{margin:0 0 8px}}
   /* responsive: stack panels on small screens */
   @media (max-width:1100px){
     body{overflow:auto}
@@ -148,18 +199,22 @@
 <body>
 <div class="app">
   <header>
-    <div>
-      <h1>🏭 Pharma Plant Layout Builder</h1>
+    <div class="brand">
+      <span class="logo"><svg viewBox="0 0 40 40" width="38" height="38" role="img" aria-label="Pharma Plant Layout Builder"><title>Pharma Plant Layout Builder</title><rect width="40" height="40" rx="9" fill="#2f6fe0"/><rect x="9.5" y="10.5" width="10" height="9" rx="1.5" fill="#ffffff" fill-opacity="0.3"/><g fill="none" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="9.5" y="10.5" width="21" height="19" rx="2.5"/><line x1="19.5" y1="10.5" x2="19.5" y2="29.5"/><line x1="9.5" y1="20" x2="30.5" y2="20"/></g><circle cx="14.5" cy="15" r="1.7" fill="#8fe6b6"/></svg></span>
+      <div class="brand-txt"><h1>Pharma Plant Layout Builder</h1><span class="brand-tag">GMP · PIC/S · F-D3-81</span></div>
     </div>
     <div class="spacer"></div>
     <span class="hdr-ctrl">
-      <label class="sub" for="form">รูปแบบยา:</label>
-      <select id="form"></select>
-      <button class="btn" id="scaffold" title="โหลดผังตัวอย่างที่ยังไม่ผ่าน GMP แล้วลองหาและแก้จุดผิด">โหลดผังเริ่มต้น</button>
-      <button class="btn" id="reset">ล้าง</button>
-      <button class="btn" id="export">บันทึก JSON</button>
-      <label class="btn ghost" style="cursor:pointer">โหลด JSON<input id="import" type="file" accept="application/json" hidden></label>
-      <button class="btn" id="print">พิมพ์/PDF</button>
+      <label class="fld" for="form"><span>รูปแบบยา</span><select id="form"></select></label>
+      <div class="seg">
+        <button class="btn" id="scaffold" title="โหลดผังตัวอย่างที่ยังไม่ผ่าน GMP แล้วลองหาและแก้จุดผิด">โหลดผังเริ่มต้น</button>
+        <button class="btn" id="reset" title="ล้างผังทั้งหมด">ล้าง</button>
+      </div>
+      <div class="seg">
+        <button class="btn" id="export" title="บันทึกเป็นไฟล์ JSON">💾 บันทึก</button>
+        <label class="btn" style="cursor:pointer" title="โหลดไฟล์ JSON">📂 โหลด<input id="import" type="file" accept="application/json" hidden></label>
+        <button class="btn" id="print" title="พิมพ์ / บันทึกเป็น PDF">🖨 พิมพ์</button>
+      </div>
     </span>
   </header>
 
@@ -179,27 +234,41 @@
   <!-- CENTER -->
   <main class="center">
     <div class="toolbar">
-      <span style="font-size:12px;color:var(--muted)">การไหล (Flow):</span>
-      <label class="toggle"><input type="checkbox" id="f_personnel"><span style="color:#2f6fe0">● คน</span></label>
-      <label class="toggle"><input type="checkbox" id="f_material"><span style="color:#159a63">● วัตถุดิบ</span></label>
-      <label class="toggle"><input type="checkbox" id="f_product"><span style="color:#cf7d0a">● ผลิตภัณฑ์</span></label>
-      <label class="toggle"><input type="checkbox" id="f_waste"><span style="color:#d6453f">● ของเสีย</span></label>
-      <span style="flex:1"></span>
-      <div class="zoomctl">
+      <div class="seg flows" role="group" aria-label="ชั้นการไหล">
+        <span class="tglabel">Overlay</span>
+        <label class="toggle"><input type="checkbox" id="f_personnel"><span style="color:#2f6fe0">● คน</span></label>
+        <label class="toggle"><input type="checkbox" id="f_material"><span style="color:#159a63">● วัตถุดิบ</span></label>
+        <label class="toggle"><input type="checkbox" id="f_product"><span style="color:#cf7d0a">● ผลิตภัณฑ์</span></label>
+        <label class="toggle"><input type="checkbox" id="f_waste"><span style="color:#d6453f">● ของเสีย</span></label>
+        <label class="toggle"><input type="checkbox" id="f_pressure"><span style="color:#4a7a7a">◐ ความดัน</span></label>
+      </div>
+      <span class="divider"></span>
+      <div class="seg" role="group" aria-label="เครื่องมือแก้ไข">
+        <button class="btn iconbtn" id="doormode" title="โหมดวางประตู: คลิกขอบห้องวางบานประตู · คลิกหมุนทิศเปิด · Alt+คลิก interlock · Shift+คลิกลบ">🚪</button>
+        <button class="btn iconbtn" id="rotate" title="หมุนห้องที่เลือก (R)">⟲</button>
+        <button class="btn iconbtn" id="del" title="ลบห้องที่เลือก (Delete)">🗑</button>
+        <button class="btn iconbtn" id="undo" title="ย้อนกลับ (Ctrl+Z)">↶</button>
+      </div>
+      <span class="divider"></span>
+      <div class="seg zoomctl" role="group" aria-label="ซูม">
         <button class="btn zbtn" id="zoomout" title="ซูมออก" aria-label="ซูมออก">−</button>
         <button class="btn zbtn" id="zoomreset" title="รีเซ็ต 100%"><span id="zoomlvl">100%</span></button>
         <button class="btn zbtn" id="zoomin" title="ซูมเข้า" aria-label="ซูมเข้า">+</button>
         <button class="btn zbtn" id="zoomfit" title="พอดีจอ" aria-label="พอดีจอ">⤢</button>
       </div>
-      <button class="btn" id="rotate" title="หมุนห้องที่เลือก (คีย์ลัด: R)">หมุนห้อง ⟲</button>
-      <button class="btn" id="undo" title="ย้อนกลับ (คีย์ลัด: Ctrl+Z)">↶ ย้อน</button>
-      <button class="btn" id="del" title="ลบห้องที่เลือก (คีย์ลัด: Delete)">ลบห้องที่เลือก 🗑</button>
+      <span class="divider"></span>
+      <div class="seg" role="group" aria-label="รายงาน">
+        <button class="btn" id="schedbtn" title="ตารางข้อมูลห้อง (F-D3-81 ข้อ 13/14)">📋 ตาราง</button>
+        <button class="btn" id="fd81btn" title="เช็คลิสต์ F-D3-81">✔ F-D3-81</button>
+      </div>
+      <span class="grow"></span>
       <button class="btn primary" id="check">ตรวจ GMP ✓</button>
     </div>
     <div class="layouttype">โครงสร้างผัง: สายการผลิตเรียงต่อเนื่อง = <b>Product layout</b> · กลุ่ม QC/สนับสนุน = <b>Process layout</b> · รวมทั้งผัง = <b>Combination layout</b></div>
     <div class="floorwrap">
       <div class="floor" id="floor">
         <svg class="svgflow" id="svg"></svg>
+        <svg class="doorsvg" id="doorsvg"></svg>
         <div class="hint" id="hint">เลือกรูปแบบยา แล้วคลิกห้องจากคลังด้านซ้ายเพื่อเริ่มวางผัง<br>หรือกด “โหลดผังเริ่มต้น” เพื่อโหลดผังตัวอย่างที่ยังไม่ผ่าน GMP แล้วหาและแก้จุดผิด<br><span style="font-size:12px">ลาก/ลูกศรเพื่อย้าย · ลากมุมขวาล่าง (หรือ Shift+ลูกศร) ปรับขนาด · R หมุน · Delete ลบ · Ctrl+Z ย้อน · Ctrl+ล้อเมาส์ หรือปุ่ม −/+ ซูม</span></div>
       </div>
     </div>
@@ -217,6 +286,8 @@
         <div id="crossnote" style="color:var(--warn)"></div>
       </div>
     </div>
+    <div class="sech">ข้อมูลห้อง (F-D3-81 ข้อ 13/14)</div>
+    <div id="inspector"></div>
     <div class="sech">รายการตรวจ (อ้างอิง GMP ข้อ / PIC/S)</div>
     <div id="rules"></div>
   </aside>
@@ -241,6 +312,30 @@
     <div class="sm-actions"><button class="btn primary" id="sm_ok">เข้าใจแล้ว เริ่มขั้นนี้</button></div>
   </div>
 </div>
+
+<!-- ROOM DATA SCHEDULE -->
+<div class="modal-back" id="schedmodal" hidden>
+  <div class="modal modal-wide">
+    <button class="modal-x" id="sched_close" aria-label="ปิด">✕</button>
+    <h3>ตารางข้อมูลห้อง (Room Data Schedule) — F-D3-81 ข้อ 13/14</h3>
+    <p class="sm-desc">สรุปต่อห้อง: ระดับความสะอาด · อุณหภูมิ · ความชื้น · ความดัน · airflow · air change · ดูดฝุ่น · AHU · แสง — ตรงกับที่เอกสารยื่น อย. ต้องระบุ (ปรับค่าได้ที่ “ข้อมูลห้อง” ในแผงขวา)</p>
+    <div id="sched_body" class="sched-wrap"></div>
+    <div class="sm-actions"><button class="btn primary" id="sched_ok">ปิด</button></div>
+  </div>
+</div>
+
+<!-- F-D3-81 CHECKLIST -->
+<div class="modal-back" id="fd81modal" hidden>
+  <div class="modal modal-wide">
+    <button class="modal-x" id="fd81_close" aria-label="ปิด">✕</button>
+    <h3>เช็คลิสต์ F-D3-81 (รายการที่เกี่ยวกับผัง)</h3>
+    <p class="sm-desc">ความครบถ้วนของผังเทียบกับแบบฟอร์มตรวจของ อย. — <span class="fd-ic ok">✓</span> ครบ · <span class="fd-ic wa">◐</span> บางส่วน · <span class="fd-ic er">✕</span> ขาด · <span class="fd-ic na">–</span> ยังไม่เกี่ยว</p>
+    <div id="fd81_body"></div>
+    <div class="sm-actions"><button class="btn primary" id="fd81_ok">ปิด</button></div>
+  </div>
+</div>
+
+<div id="schedprint" class="printonly"></div>
 
 <script>
 "use strict";
@@ -290,11 +385,21 @@ const ROOMS = {
   gowning_d:   {th:'เปลี่ยนชุดเข้า D', en:'Gowning →D', z:'air', w:2,h:1, grade:'D'},
   gowning_c:   {th:'เปลี่ยนชุดเข้า C', en:'Gowning →C', z:'air', w:2,h:1, grade:'C'},
   gowning_b:   {th:'เปลี่ยนชุดเข้า B', en:'Gowning →B', z:'air', w:2,h:1, grade:'B'},
-  // beta-lactam
-  bl_granul:   {th:'แกรนูล β-lactam', en:'β-lactam granulation', z:'grey', w:3,h:2, bl:true},
-  bl_compress: {th:'ตอกเม็ด β-lactam', en:'β-lactam compression', z:'grey', w:3,h:2, bl:true},
-  bl_pack:     {th:'บรรจุ β-lactam', en:'β-lactam packing', z:'grey', w:3,h:2, bl:true},
-  bl_airlock:  {th:'แอร์ล็อก β-lactam (AHU แยก)', en:'Dedicated airlock', z:'air', w:2,h:2, bl:true},
+  // beta-lactam (สายเฉพาะ + containment)
+  bl_granul:   {th:'แกรนูล β-lactam', en:'β-lactam granulation', z:'grey', w:3,h:2, bl:true, ded:'bl', containment:true},
+  bl_compress: {th:'ตอกเม็ด β-lactam', en:'β-lactam compression', z:'grey', w:3,h:2, bl:true, ded:'bl', containment:true},
+  bl_pack:     {th:'บรรจุ β-lactam', en:'β-lactam packing', z:'grey', w:3,h:2, bl:true, ded:'bl', containment:true},
+  bl_airlock:  {th:'แอร์ล็อก β-lactam (AHU แยก)', en:'Dedicated airlock', z:'air', w:2,h:2, bl:true, ded:'bl'},
+  // hormone (สายเฉพาะ + containment)
+  hm_granul:   {th:'แกรนูลฮอร์โมน', en:'Hormone granulation', z:'grey', w:3,h:2, ded:'hm', containment:true},
+  hm_compress: {th:'ตอกเม็ดฮอร์โมน', en:'Hormone compression', z:'grey', w:3,h:2, ded:'hm', containment:true},
+  hm_pack:     {th:'บรรจุฮอร์โมน', en:'Hormone packing', z:'grey', w:3,h:2, ded:'hm', containment:true},
+  hm_airlock:  {th:'แอร์ล็อกฮอร์โมน (AHU แยก)', en:'Dedicated airlock', z:'air', w:2,h:2, ded:'hm'},
+  // cytotoxic (สายเฉพาะ + containment ความดันลบ)
+  cy_prep:     {th:'เตรียม cytotoxic', en:'Cytotoxic prep', z:'grey', w:3,h:2, ded:'cy', containment:true},
+  cy_fill:     {th:'บรรจุ cytotoxic (BSC)', en:'Cytotoxic filling', z:'grey', w:3,h:2, ded:'cy', containment:true},
+  cy_pack:     {th:'ปิดผนึก cytotoxic', en:'Cytotoxic packing', z:'grey', w:3,h:2, ded:'cy', containment:true},
+  cy_airlock:  {th:'แอร์ล็อก cytotoxic (AHU แยก)', en:'Dedicated airlock', z:'air', w:2,h:2, ded:'cy'},
   // shared production tail
   ipc:         {th:'ควบคุมระหว่างผลิต (IPC)', en:'In-process control', z:'grey', w:2,h:2},
   primary_pack:{th:'บรรจุปฐมภูมิ', en:'Primary packaging', z:'grey', w:3,h:2},
@@ -302,7 +407,8 @@ const ROOMS = {
   // airlocks & circulation
   corridor:    {th:'ทางเดิน', en:'Corridor', z:'air', w:4,h:1},
   pal:         {th:'Personnel Airlock', en:'PAL / gowning', z:'air', w:2,h:2},
-  mal:         {th:'Material Airlock', en:'MAL / pass box', z:'air', w:2,h:1},
+  mal:         {th:'Material Airlock', en:'MAL', z:'air', w:2,h:1},
+  passbox:     {th:'พาสบ็อกซ์', en:'Pass box', z:'air', w:2,h:1, overlay:true},
   gowning:     {th:'ห้องเปลี่ยนชุด', en:'Change room', z:'air', w:2,h:2},
   // QC
   qc_chem:     {th:'แล็บเคมี', en:'QC chemistry', z:'store', w:3,h:2},
@@ -322,7 +428,7 @@ const ROOMS = {
 
 /* ---------- ชุดห้องต่อรูปแบบยา + ลำดับการผลิต ---------- */
 const CORE_STORE = ['receiving','quarantine','sampling','released','rejected','dispensing','fg_store'];
-const CORE_SUP = ['corridor','pal','mal','gowning','qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste','ipc','primary_pack','secondary_pack'];
+const CORE_SUP = ['corridor','pal','mal','passbox','gowning','qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste','ipc','primary_pack','secondary_pack'];
 
 const FORMS = {
   osd: {name:'ยาเม็ด/แคปซูล (OSD, non-sterile)', sterile:false,
@@ -340,13 +446,19 @@ const FORMS = {
   sterile_asept: {name:'ยาปราศจากเชื้อ — กระบวนการปลอดเชื้อ (Aseptic)', sterile:true, aseptic:true,
     prod:['comp_ster','filtration','fill_asept','lyo','capping'],
     rooms:[...CORE_STORE,'comp_ster','filtration','fill_asept','lyo','capping','gowning_d','gowning_c','gowning_b',...CORE_SUP]},
-  betalactam: {name:'β-lactam เฉพาะสาย (Dedicated)', sterile:false, dedicated:true,
+  betalactam: {name:'β-lactam เฉพาะสาย (Dedicated)', sterile:false, dedicated:true, dedGroup:'bl',
     prod:['bl_granul','bl_compress','bl_pack'],
     rooms:[...CORE_STORE,'bl_granul','bl_compress','bl_pack','bl_airlock',...CORE_SUP]},
+  hormone: {name:'ฮอร์โมน เฉพาะสาย (Dedicated, containment)', sterile:false, dedicated:true, dedGroup:'hm',
+    prod:['hm_granul','hm_compress','hm_pack'],
+    rooms:[...CORE_STORE,'hm_granul','hm_compress','hm_pack','hm_airlock',...CORE_SUP]},
+  cytotoxic: {name:'ยาเคมีบำบัด/Cytotoxic เฉพาะสาย (Dedicated)', sterile:false, dedicated:true, dedGroup:'cy',
+    prod:['cy_prep','cy_fill','cy_pack'],
+    rooms:[...CORE_STORE,'cy_prep','cy_fill','cy_pack','cy_airlock',...CORE_SUP]},
 };
 
 /* ---------- กลุ่มอ้างอิงสำหรับกฎ ---------- */
-const AIRLOCKS = ['pal','mal','gowning','gowning_d','gowning_c','gowning_b','corridor','bl_airlock'];
+const AIRLOCKS = ['pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','corridor','bl_airlock','hm_airlock','cy_airlock'];
 const GOWNINGS = ['pal','gowning','gowning_d','gowning_c','gowning_b'];
 const BLACK = ['receiving','secondary_pack','change_room','toilet','canteen','office','workshop','waste'];
 const WELFARE_KEEPAWAY = ['toilet','canteen'];
@@ -354,7 +466,8 @@ const WELFARE_KEEPAWAY = ['toilet','canteen'];
 /* ============================================================
    STATE
    ============================================================ */
-let state = { form:'osd', placed:[], sel:null, step:0, uid:1, history:[],
+let state = { form:'osd', placed:[], doors:[], sel:null, step:0, uid:1, history:[],
+  showPressure:false, doorMode:false,
   flows:{personnel:false,material:false,product:false,waste:false} };
 
 /* ============================================================
@@ -383,12 +496,68 @@ function placedProd(){ return prodIds().filter(has); }
 function prodAdjAny(list){ return placedProd().some(pid=>adjAny(pid,list)); }
 // ตรวจการซ้อนทับ
 function rectsOverlap(a,b){ return a.x<b.x+b.w && b.x<a.x+a.w && a.y<b.y+b.h && b.y<a.y+a.h; }
-function overlapsAt(uid,x,y,w,h){ return state.placed.some(p=>p.uid!==uid && rectsOverlap({x,y,w,h},p)); }
+function isOverlay(id){ return !!(ROOMS[id]&&ROOMS[id].overlay); }   // เช่น Pass box — วางคร่อมผนัง/ทับห้องได้
+function overlapsAt(uid,x,y,w,h){
+  const mov=state.placed.find(p=>p.uid===uid);
+  if(mov && isOverlay(mov.id)) return false;                         // ตัว overlay เอง วางทับได้
+  return state.placed.some(p=>p.uid!==uid && !isOverlay(p.id) && rectsOverlap({x,y,w,h},p));
+}
 function overlappingIds(){
   const s=new Set(), a=state.placed;
-  for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++) if(rectsOverlap(a[i],a[j])){ s.add(a[i].id); s.add(a[j].id); }
+  for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++){
+    if(isOverlay(a[i].id)||isOverlay(a[j].id)) continue;             // ไม่นับ overlay ว่าซ้อน
+    if(rectsOverlap(a[i],a[j])){ s.add(a[i].id); s.add(a[j].id); }
+  }
   return [...s];
 }
+// มี Material Airlock / Pass box / แอร์ล็อกเฉพาะ อย่างใดอย่างหนึ่งไหม
+function hasMaterialAirlock(){ return has('mal')||has('passbox')||has('bl_airlock')||has('hm_airlock')||has('cy_airlock'); }
+// ความดันสัมพัทธ์ของห้อง (Pa): เกรดสะอาดยิ่งสูง = ความดันบวกยิ่งมาก; ห้อง containment = ลบ
+function roomPressure(id){
+  const r=ROOMS[id]; if(!r) return 0;
+  if(r.grade) return gradeRank[r.grade]*15;   // D=+15, C=+30, B=+45, A=+60
+  if(r.containment) return -15;                // ห้องเฉพาะอันตราย = ความดันลบ (ดูดอากาศเข้า กันฟุ้ง)
+  return 0;
+}
+// ขอบที่สองห้องติดกัน: คืนจุดกึ่งกลางขอบ (px) + ทิศจาก a→b
+function sharedEdge(a,b){
+  const ax2=a.x+a.w, ay2=a.y+a.h, bx2=b.x+b.w, by2=b.y+b.h;
+  const ovY=[Math.max(a.y,b.y),Math.min(ay2,by2)], ovX=[Math.max(a.x,b.x),Math.min(ax2,bx2)];
+  if(ax2===b.x) return {mx:b.x*CELL, my:(ovY[0]+ovY[1])/2*CELL, dir:[1,0]};
+  if(bx2===a.x) return {mx:a.x*CELL, my:(ovY[0]+ovY[1])/2*CELL, dir:[-1,0]};
+  if(ay2===b.y) return {mx:(ovX[0]+ovX[1])/2*CELL, my:b.y*CELL, dir:[0,1]};
+  if(by2===a.y) return {mx:(ovX[0]+ovX[1])/2*CELL, my:a.y*CELL, dir:[0,-1]};
+  return null;
+}
+
+/* ---------- ข้อมูลสภาพแวดล้อมต่อห้อง (F-D3-81 ข้อ 13/14) ---------- */
+// ค่าเริ่มต้นตามระดับความสะอาด (แนวสอน): dP=ความดันสัมพัทธ์(Pa), T(°C), RH(%), ach(ครั้ง/ชม.), airflow, lux
+const CLASS_DEFAULTS = {
+  A:{dP:60,T:22,RH:50,ach:20,airflow:'UDAF',lux:500},
+  B:{dP:45,T:22,RH:50,ach:20,airflow:'turbulent',lux:500},
+  C:{dP:30,T:22,RH:50,ach:20,airflow:'turbulent',lux:400},
+  D:{dP:15,T:22,RH:50,ach:12,airflow:'turbulent',lux:300},
+};
+// ห้องที่มีฝุ่นฟุ้ง (ต้องมีระบบดูดฝุ่น ข้อ 42/43)
+const DUST = new Set(['dispensing','sampling','granulation','drying','blending','compression','coating','primary_pack','capping','bl_granul','bl_compress','bl_pack','hm_granul','hm_compress','hm_pack','cy_pack','mix_semi']);
+const CLASS_OPTS = ['A','B','C','D','CNC','—'];
+function classRank(c){ return gradeRank[c]||0; }
+function computeEnv(p){
+  const r=ROOMS[p.id]||{}, g=r.grade, base=g?CLASS_DEFAULTS[g]:null, e=p.env||{};
+  const num=(v,d)=> (v===''||v==null||isNaN(+v))? d : +v;
+  return {
+    cls: e.cls || g || (r.containment?'CNC':(r.z==='white'?'?':(r.z==='grey'?'CNC':'—'))),
+    T:   num(e.T, base?base.T:''),
+    RH:  num(e.RH, base?base.RH:''),
+    dP:  num(e.dP, roomPressure(p.id)),
+    ach: num(e.ach, base?base.ach:''),
+    airflow: e.airflow || (g==='A'?'UDAF':'turbulent'),
+    dust: e.dust!=null? !!e.dust : DUST.has(p.id),
+    ahu: e.ahu || '',
+    lux: num(e.lux, base?base.lux:''),
+  };
+}
+function setEnv(p,f,v){ if(!p.env) p.env={}; p.env[f]=v; }
 
 /* ---------- กฎ (คืน pass/fail/warn/na) ---------- */
 function buildRules(){
@@ -408,19 +577,19 @@ function buildRules(){
     run:()=>{ const miss=prodIds().filter(id=>!has(id));
       return miss.length?{s:'fail',d:'ยังขาดห้องผลิต: '+miss.map(id=>ROOMS[id].th).join(', ')}:{s:'pass'}; }});
 
-  R.push({cl:'ข้อ 47 / PIC/S 3.22', pr:'Safety', th:'ของไม่ผ่าน (Rejected) แยกจากคลังปล่อยผ่าน',
+  R.push({cl:'ข้อ 47, 52 / PIC/S 3.22', pr:'Safety', th:'ของไม่ผ่าน (Rejected) แยกจากคลังปล่อยผ่าน',
     run:()=> (!has('rejected')||!has('released'))?{s:'na'}:
        (!adjIds('rejected','released')?{s:'pass'}:{s:'warn',d:'ควรกันบริเวณ/แยกให้ชัด',rooms:['rejected','released']})});
 
-  R.push({cl:'containment · แอร์ล็อก', pr:'Smooth Flow', th:'ห้องชั่ง/จ่ายวัตถุดิบ เข้าถึงผ่านแอร์ล็อก',
+  R.push({cl:'ข้อ 42, 41 · แอร์ล็อก', pr:'Smooth Flow', th:'ห้องชั่ง/จ่ายวัตถุดิบ เข้าถึงผ่านแอร์ล็อก',
     run:()=> !has('dispensing')?{s:'na'}:
        (adjAny('dispensing',AIRLOCKS)?{s:'pass'}:{s:'fail',d:'ต่อ MAL/ทางเดิน/ห้องเปลี่ยนชุดคั่น ไม่ให้เปิดตรงสู่ภายนอก',rooms:['dispensing']})});
 
-  R.push({cl:'PIC/S 3.x · บุคลากร', pr:'Smooth Flow', th:'บุคลากรเข้าสู่พื้นที่ผลิตผ่าน PAL / ห้องเปลี่ยนชุด',
+  R.push({cl:'ข้อ 60, 34 · บุคลากร', pr:'Smooth Flow', th:'บุคลากรเข้าสู่พื้นที่ผลิตผ่าน PAL / ห้องเปลี่ยนชุด',
     run:()=> placedProd().length===0?{s:'na'}:
        (prodAdjAny(GOWNINGS)?{s:'pass'}:{s:'fail',d:'ต้องมี Personnel Airlock/ห้องเปลี่ยนชุดติดกับสายการผลิต',rooms:placedProd()})});
 
-  R.push({cl:'"NO OUTSIDE IN / NO INSIDE OUT"', pr:'Safety', th:'พื้นที่ผลิตไม่ติดพื้นที่ทั่วไป/ภายนอกโดยตรง (กันทั้งขาเข้า–ขาออก)',
+  R.push({cl:'ข้อ 41, 34 · "NO OUTSIDE IN"', pr:'Safety', th:'พื้นที่ผลิตไม่ติดพื้นที่ทั่วไป/ภายนอกโดยตรง (กันทั้งขาเข้า–ขาออก)',
     run:()=> placedProd().length===0?{s:'na'}:
        (()=>{ const bad=placedProd().filter(pid=>adjAny(pid,BLACK));
          return bad.length?{s:'fail',d:'ห้องผลิตชนพื้นที่ black (รับของ/บรรจุนอก/ห้องน้ำ ฯลฯ) — ต้องมีแอร์ล็อกคั่น ทั้งทางคน วัตถุดิบ และของเสีย',rooms:bad}:{s:'pass'}; })()});
@@ -434,7 +603,7 @@ function buildRules(){
     run:()=> !has('qc_chem')?{s:'na'}:
        (placedProd().some(pid=>adjIds('qc_chem',pid))?{s:'warn',d:'ควรแยก QC ออกจากสายผลิต',rooms:['qc_chem']}:{s:'pass'})});
 
-  R.push({cl:'ข้อ 60 / PIC/S 3.31', pr:'Safety', th:'ห้องน้ำ/โรงอาหาร ไม่เปิดตรงสู่พื้นที่ผลิตหรือจัดเก็บ',
+  R.push({cl:'ข้อ 59, 60 / PIC/S 3.30–3.31', pr:'Safety', th:'ห้องน้ำ/โรงอาหาร ไม่เปิดตรงสู่พื้นที่ผลิตหรือจัดเก็บ',
     run:()=>{ const rel=[...placedProd(),'dispensing','sampling','released','quarantine'].filter(has);
        const badset=new Set();
        WELFARE_KEEPAWAY.filter(has).forEach(w=>{ rel.forEach(r=>{ if(adjIds(w,r)){ badset.add(w); badset.add(r); } }); });
@@ -446,9 +615,9 @@ function buildRules(){
        return bad.length?{s:'warn',d:'ห้องผลิตควรเรียงติดกันตามลำดับ ไม่ให้งานย้อนทาง',rooms:[...new Set(bad)]}:{s:'pass'};}});
 
   if(!f.sterile){
-    R.push({cl:'Material flow', pr:'Smooth Flow', th:'มี Material Airlock คั่นระหว่างคลัง↔ผลิต',
+    R.push({cl:'Material flow', pr:'Smooth Flow', th:'มี Material Airlock / Pass box คั่นระหว่างคลัง↔ผลิต',
       run:()=> placedProd().length===0?{s:'na'}:
-         (has('mal')||has('bl_airlock')?{s:'pass'}:{s:'warn',d:'ควรมี MAL/pass box ส่งวัตถุดิบเข้าโดยไม่ปนทางคน'})});
+         (hasMaterialAirlock()?{s:'pass'}:{s:'warn',d:'ควรมี MAL/พาสบ็อกซ์ ส่งวัตถุดิบเข้าโดยไม่ปนทางคน'})});
   }
 
   R.push({cl:'GMP ของเสีย', pr:'Safety', th:'มีเส้นทางของเสียแยก ไม่ตัดผ่านพื้นที่สะอาด',
@@ -457,43 +626,87 @@ function buildRules(){
 
   // ---- Sterile ----
   if(f.sterile){
-    R.push({cl:'ข้อ 310 / Annex 1', pr:'Safety', th:'มีห้องเปลี่ยนชุดแบบขั้น (gowning cascade)',
+    R.push({cl:'ข้อ 358, 350 / Annex 1', pr:'Safety', th:'มีห้องเปลี่ยนชุดแบบขั้น (gowning cascade)',
       run:()=>{ const need = f.aseptic?['gowning_d','gowning_c','gowning_b']:['gowning_d','gowning_c'];
         const miss=need.filter(id=>!has(id));
         return miss.length?{s:'fail',d:'เข้าห้องสะอาดต้องผ่านห้องเปลี่ยนชุดเป็นขั้น: '+need.map(id=>ROOMS[id].th).join(' → ')}:{s:'pass'};}});
 
-    R.push({cl:'GMP ข้อ 308', pr:'Smooth Flow', th:'สายปลอดเชื้อ: วัตถุดิบ/วัสดุบรรจุเข้าผ่าน Material Airlock',
-      run:()=> has('mal')||has('bl_airlock')?{s:'pass'}:
-        {s:'fail',d:'ทางเข้าเครื่องมือ/วัตถุดิบสู่พื้นที่ปลอดเชื้อต้องผ่านแอร์ล็อก (ไม่มี = ข้อบกพร่องสำคัญ)'}});
+    R.push({cl:'GMP ข้อ 308', pr:'Smooth Flow', th:'สายปลอดเชื้อ: วัตถุดิบ/วัสดุบรรจุเข้าผ่าน Material Airlock / Pass box',
+      run:()=> hasMaterialAirlock()?{s:'pass'}:
+        {s:'fail',d:'ทางเข้าเครื่องมือ/วัตถุดิบสู่พื้นที่ปลอดเชื้อต้องผ่านแอร์ล็อก/พาสบ็อกซ์ (ไม่มี = ข้อบกพร่องสำคัญ)'}});
 
-    R.push({cl:'ข้อ 311 / Annex 1 (pressure cascade)', pr:'Safety', th:'ห้องสะอาดที่ติดกันต้องต่างเกรดไม่เกิน 1 ระดับ (ไม่มี C ชน A)',
+    R.push({cl:'ข้อ 360 / Annex 1 (pressure cascade)', pr:'Safety', th:'ห้องสะอาดที่ติดกันต้องต่างเกรดไม่เกิน 1 ระดับ (ไม่มี C ชน A)',
       run:()=>{ const g=state.placed.filter(p=>ROOMS[p.id]&&ROOMS[p.id].grade), bad=new Set();
         for(let i=0;i<g.length;i++) for(let j=i+1;j<g.length;j++){
           if(touching(g[i],g[j]) && Math.abs(gradeRank[ROOMS[g[i].id].grade]-gradeRank[ROOMS[g[j].id].grade])>=2){ bad.add(g[i].id); bad.add(g[j].id); } }
         return bad.size?{s:'fail',d:'ห้องต่างเกรดเกิน 1 ระดับติดกันโดยตรง ต้องมีห้องเกรดกลาง/แอร์ล็อกคั่นตาม pressure cascade',rooms:[...bad]}:{s:'pass'};}});
 
-    R.push({cl:'ข้อ 311 / Annex 1 (cascade)', pr:'Safety', th:'บริเวณเกรดสูงไม่ชน Black/สกปรกโดยตรง',
+    R.push({cl:'ข้อ 360 / Annex 1 (cascade)', pr:'Safety', th:'บริเวณเกรดสูงไม่ชน Black/สกปรกโดยตรง',
       run:()=>{ const core=[f.aseptic?'fill_asept':'fill_term','comp_ster','filtration','lyo','capping'].filter(has);
         if(!core.length) return {s:'na'};
         const bad=core.filter(c=>adjAny(c,BLACK)||adjAny(c,['receiving','dispensing','fg_store']));
         return bad.length?{s:'fail',d:'ห้องสะอาดชนพื้นที่ที่สกปรกกว่าโดยตรง — ต้องมีเกรด/แอร์ล็อกคั่นตาม pressure cascade',rooms:bad}:{s:'pass'};}});
 
-    if(f.aseptic) R.push({cl:'ข้อ 311 / Annex 1 (A in B)', pr:'Safety', th:'จุดบรรจุปลอดเชื้อ (A) เข้าถึงผ่านห้องเปลี่ยนชุดเกรด B',
+    if(f.aseptic) R.push({cl:'ข้อ 340, 358 / Annex 1 (A in B)', pr:'Safety', th:'จุดบรรจุปลอดเชื้อ (A) เข้าถึงผ่านห้องเปลี่ยนชุดเกรด B',
       run:()=> !has('fill_asept')?{s:'na'}:
         (adjAny('fill_asept',['gowning_b'])?{s:'pass'}
           :{s:'fail',d:'Grade A ต้องอยู่ใน background B และเข้าถึงผ่าน gowning B โดยตรง',rooms:['fill_asept']})});
   }
   // ---- β-lactam ----
   if(f.dedicated){
-    R.push({cl:'GMP ข้อ 35 / Dedicated', pr:'Safety', th:'สาย β-lactam แยกเด็ดขาด (ติดเฉพาะห้อง β-lactam/แอร์ล็อก)',
-      run:()=>{ const bl=['bl_granul','bl_compress','bl_pack'].filter(has); if(!bl.length) return {s:'na'};
-        const others = state.placed.map(p=>p.id).filter(id=>ROOMS[id] && !ROOMS[id].bl && !AIRLOCKS.includes(id));
-        const bad=bl.filter(b=>others.some(o=>adjIds(b,o)));
-        return bad.length?{s:'fail',d:'β-lactam ห้ามติดสาย/ห้องอื่น ต้องแยกอาคาร/โซน + AHU + ระบบน้ำแยก (ข้อ 35 ใช้กับ cephalosporin/ฮอร์โมน/cytotoxic/ชีววัตถุด้วย)',rooms:bad}:{s:'pass'};}});
-    R.push({cl:'GMP ข้อ 35 / AHU + น้ำแยก', pr:'Safety', th:'มีแอร์ล็อกเฉพาะ (AHU/ระบบน้ำแยก) เข้าสาย β-lactam',
-      run:()=> ['bl_granul','bl_compress','bl_pack'].some(has)?
-        (has('bl_airlock')?{s:'pass'}:{s:'fail',d:'ต้องมีแอร์ล็อกเฉพาะกันการฟุ้งข้ามสาย',rooms:['bl_granul','bl_compress','bl_pack'].filter(has)}):{s:'na'}});
+    const grp=f.dedGroup, dedAir=grp+'_airlock', dedProd=f.prod, nm={bl:'β-lactam',hm:'ฮอร์โมน',cy:'cytotoxic'}[grp]||'สายเฉพาะ';
+    R.push({cl:'GMP ข้อ 35 / Dedicated', pr:'Safety', th:'สาย '+nm+' แยกเด็ดขาด (ติดเฉพาะห้องสายเดียวกัน/แอร์ล็อก)',
+      run:()=>{ const dl=dedProd.filter(has); if(!dl.length) return {s:'na'};
+        const others = state.placed.map(p=>p.id).filter(id=>ROOMS[id] && ROOMS[id].ded!==grp && !AIRLOCKS.includes(id));
+        const bad=dl.filter(b=>others.some(o=>adjIds(b,o)));
+        return bad.length?{s:'fail',d:nm+' ห้ามติดสาย/ห้องอื่น ต้องแยกอาคาร/โซน + AHU + ระบบน้ำแยก (ข้อ 35 ใช้กับ penicillin/cephalosporin/ฮอร์โมน/cytotoxic/ชีววัตถุ)',rooms:bad}:{s:'pass'};}});
+    R.push({cl:'GMP ข้อ 35 / AHU + น้ำแยก', pr:'Safety', th:'มีแอร์ล็อกเฉพาะ (AHU/ระบบน้ำแยก) เข้าสาย '+nm,
+      run:()=> dedProd.some(has)?
+        (has(dedAir)?{s:'pass'}:{s:'fail',d:'ต้องมีแอร์ล็อกเฉพาะกันการฟุ้งข้ามสาย',rooms:dedProd.filter(has)}):{s:'na'}});
   }
+
+  // ---- HVAC / สภาพแวดล้อมห้อง (F-D3-81 ข้อ 13/14) ----
+  // A1: pressure cascade เป็นตัวเลข — ห้องเกรดสูงต้องความดันสูงกว่า และต่างกัน 10–15 Pa
+  R.push({cl:'ข้อ 360 · ΔP 10–15 Pa', pr:'Safety', th:'ความดันไล่จากห้องสะอาดกว่า→สะอาดน้อยกว่า และต่างกัน 10–15 Pa',
+    run:()=>{ const g=state.placed.filter(p=>ROOMS[p.id]&&ROOMS[p.id].grade); if(g.length<2) return {s:'na'};
+      const bad=new Set(); let warn=false, any=false;
+      for(let i=0;i<g.length;i++) for(let j=i+1;j<g.length;j++){
+        if(!touching(g[i],g[j])) continue;
+        const ei=computeEnv(g[i]), ej=computeEnv(g[j]); if(ei.cls===ej.cls) continue; any=true;
+        const hi = classRank(ei.cls)>classRank(ej.cls)? {e:ei,r:g[i]} : {e:ej,r:g[j]};
+        const lo = hi.r===g[i]? {e:ej,r:g[j]} : {e:ei,r:g[i]};
+        if(hi.e.dP<=lo.e.dP){ bad.add(g[i].id); bad.add(g[j].id); }
+        else { const step=hi.e.dP-lo.e.dP; if(step<10||step>15) warn=true; }
+      }
+      if(!any) return {s:'na'};
+      if(bad.size) return {s:'fail',d:'ห้องเกรดสูงต้องมีความดันสูงกว่าห้องข้างเคียงที่สะอาดน้อยกว่า (อากาศไหลออกจากที่สะอาดกว่า) — แก้ค่าใน “ข้อมูลห้อง”',rooms:[...bad]};
+      return warn?{s:'warn',d:'ผลต่างความดันระหว่างห้องต่างเกรดควรอยู่ 10–15 Pa'}:{s:'pass'};}});
+
+  // A3a: Grade A ต้องเป็น unidirectional airflow (UDAF/laminar)
+  R.push({cl:'ข้อ 310, 361 · UDAF', pr:'Safety', th:'ห้อง Grade A ต้องเป็น unidirectional airflow (0.36–0.54 m/s)',
+    run:()=>{ const A=state.placed.filter(p=>ROOMS[p.id]&&ROOMS[p.id].grade==='A'); if(!A.length) return {s:'na'};
+      const bad=A.filter(p=>computeEnv(p).airflow!=='UDAF').map(p=>p.id);
+      return bad.length?{s:'fail',d:'Grade A ต้องเป็น unidirectional airflow — ตั้งใน “ข้อมูลห้อง”',rooms:bad}:{s:'pass'};}});
+
+  // A3b: ห้องมีฝุ่นต้องมีระบบดูดฝุ่น (ข้อ 42/43)
+  R.push({cl:'ข้อ 42, 43 · ดูดฝุ่น', pr:'Safety', th:'ห้องที่มีฝุ่นฟุ้ง (ชั่ง/แกรนูล/ตอก/เคลือบ/บรรจุ) ต้องมีระบบดูดฝุ่น',
+    run:()=>{ const dr=state.placed.filter(p=>DUST.has(p.id)); if(!dr.length) return {s:'na'};
+      const bad=[...new Set(dr.filter(p=>!computeEnv(p).dust).map(p=>p.id))];
+      return bad.length?{s:'warn',d:'ห้องมีฝุ่นควรมีระบบดูดฝุ่น/ตู้ปิด — ตั้งใน “ข้อมูลห้อง”',rooms:bad}:{s:'pass'};}});
+
+  // B2: พื้นที่สะอาด/ปลอดเชื้อ ต้องมี AHU จ่ายอากาศผ่าน HEPA (ข้อ 41)
+  R.push({cl:'ข้อ 41 · HVAC/HEPA', pr:'Safety', th:'พื้นที่สะอาด/ปลอดเชื้อ ต้องมี AHU จ่ายอากาศผ่าน Pre→Medium→HEPA',
+    run:()=>{ const graded=state.placed.some(p=>ROOMS[p.id]&&ROOMS[p.id].grade); if(!graded) return {s:'na'};
+      return has('ahu')?{s:'pass'}:{s:'fail',d:'ไม่มีเครื่องปรับอากาศ (AHU) จ่ายอากาศ HEPA ให้พื้นที่สะอาด = ข้อบกพร่องวิกฤต'};}});
+
+  // A2: แอร์ล็อกที่มีประตู ควรมี 2 บานคนละผนัง + interlock (ข้อ 359)
+  R.push({cl:'ข้อ 359 · interlock', pr:'Safety', th:'แอร์ล็อกควรมี 2 ประตูคนละผนัง + interlock (เปิดพร้อมกันไม่ได้)',
+    run:()=>{ const air=state.placed.filter(p=>ROOMS[p.id]&&ROOMS[p.id].z==='air');
+      const withDoors=air.filter(p=>state.doors.some(d=>d.room===p.uid)); if(!withDoors.length) return {s:'na'};
+      const bad=withDoors.filter(p=>{ const ds=state.doors.filter(d=>d.room===p.uid);
+        return ds.length<2 || new Set(ds.map(d=>d.side)).size<2 || !ds.every(d=>d.interlock); }).map(p=>p.id);
+      return bad.length?{s:'warn',d:'แอร์ล็อกควรมี 2 ประตูคนละผนัง และตั้ง interlock (Alt+คลิกประตู) เพื่อรักษาการแยกความดัน',rooms:[...new Set(bad)]}:{s:'pass'};}});
+
   return R;
 }
 
@@ -535,13 +748,14 @@ function wasteCross(){
    RENDER
    ============================================================ */
 const $=s=>document.querySelector(s), el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
-const floor=$('#floor'), svg=$('#svg');
+const floor=$('#floor'), svg=$('#svg'), doorsvg=$('#doorsvg');
 
 function initFloor(){
   floor.style.width=(COLS*CELL)+'px'; floor.style.height=(ROWS*CELL)+'px';
   floor.style.backgroundSize=CELL+'px '+CELL+'px';
   floor.style.transformOrigin='0 0';
-  svg.setAttribute('viewBox',`0 0 ${COLS*CELL} ${ROWS*CELL}`);
+  const vb=`0 0 ${COLS*CELL} ${ROWS*CELL}`;
+  svg.setAttribute('viewBox',vb); doorsvg.setAttribute('viewBox',vb);
 }
 
 /* ---------- zoom ---------- */
@@ -571,16 +785,17 @@ function stepList(){
   const s=[
     {t:'คลังวัตถุดิบ + การไหลของวัตถุดิบ (รับ→กักกัน→สุ่ม→ปล่อยผ่าน)', cl:'ข้อ 47 / PIC/S 3.18–3.22', rooms:['receiving','quarantine','sampling','released','rejected'],
       desc:'วางพื้นที่รับและจัดเก็บวัตถุดิบ โดยแยกตามสถานะให้ชัด (กักกัน / ปล่อยผ่าน / ไม่ผ่าน) เพื่อกันการหยิบผิด (mix-up) และการปนเปื้อนข้าม'},
-    {t:'ห้องชั่ง/จ่าย + Material Airlock', cl:'containment', rooms:['dispensing','mal'],
+    {t:'ห้องชั่ง/จ่าย + Material Airlock', cl:'ข้อ 42, 41', rooms:['dispensing','mal'],
       desc:'วางห้องชั่ง/จ่ายวัตถุดิบ และให้เข้าถึงผ่าน Material Airlock (MAL) ไม่เปิดตรงสู่ภายนอก เพื่อควบคุมการฟุ้งกระจายของผง'},
     {t:'วางสายการผลิตตามลำดับ (ทิศเดียว)', cl:'ข้อ 36 · Minimum Movement', rooms:[...f.prod,'ipc'],
       desc:'เรียงห้องผลิตให้ต่อเนื่องทิศทางเดียว (unidirectional) ตามลำดับกระบวนการ ไม่ให้งานย้อนทาง — ตรงกับหลัก Minimum Movement + Smooth Flow'},
   ];
-  if(f.sterile) s.push({t:'จัดลำดับเกรดห้องสะอาด + gowning cascade ('+(f.aseptic?'D→C→B→A':'D→C')+')', cl:'ข้อ 310–311 / Annex 1', rooms:['gowning_d','gowning_c','gowning_b','comp_ster','filtration','fill_asept','fill_term','lyo','capping'],
+  if(f.sterile) s.push({t:'จัดลำดับเกรดห้องสะอาด + gowning cascade ('+(f.aseptic?'D→C→B→A':'D→C')+')', cl:'ข้อ 358, 360 / Annex 1', rooms:['gowning_d','gowning_c','gowning_b','comp_ster','filtration','fill_asept','fill_term','lyo','capping'],
     desc:'ไล่เกรดความสะอาดจากสกปรกไปสะอาด ('+(f.aseptic?'D→C→B→A':'D→C')+') ห้องต่างเกรดห้ามติดกันเกิน 1 ระดับ และเข้าห้องสะอาดต้องผ่านห้องเปลี่ยนชุด (gowning) เป็นขั้น ๆ'});
-  if(f.dedicated) s.push({t:'แยกสาย β-lactam เด็ดขาด + แอร์ล็อก/AHU/น้ำแยก', cl:'GMP ข้อ 35', rooms:['bl_granul','bl_compress','bl_pack','bl_airlock'],
-    desc:'สาย β-lactam ต้องแยกออกจากทุกสาย ต้องมีแอร์ล็อก/AHU/ระบบน้ำเฉพาะ — หลักเดียวกันนี้ (ข้อ 35) ใช้กับ cephalosporin, ฮอร์โมน, cytotoxic และชีววัตถุด้วย'});
-  s.push({t:'ทางเดิน + Personnel Airlock (คนเข้าทางเดียว)', cl:'PIC/S 3.x', rooms:['corridor','pal','gowning','change_room'],
+  if(f.dedicated){ const nm={bl:'β-lactam',hm:'ฮอร์โมน',cy:'cytotoxic'}[f.dedGroup]||'สายเฉพาะ';
+    s.push({t:'แยกสาย '+nm+' เด็ดขาด + แอร์ล็อก/AHU/น้ำแยก', cl:'GMP ข้อ 35', rooms:[...f.prod,f.dedGroup+'_airlock'],
+      desc:'สาย '+nm+' ต้องแยกออกจากทุกสาย ต้องมีแอร์ล็อก/AHU/ระบบน้ำเฉพาะ และรักษาความดันลบ (containment) — หลักเดียวกันนี้ (ข้อ 35) ใช้กับ penicillin, cephalosporin, ฮอร์โมน, cytotoxic และชีววัตถุ'}); }
+  s.push({t:'ทางเดิน + Personnel Airlock (คนเข้าทางเดียว)', cl:'ข้อ 60, 34', rooms:['corridor','pal','gowning','change_room'],
     desc:'จัดทางเดินและ Personnel Airlock ให้บุคลากรเข้าสู่พื้นที่ผลิตทางเดียว ผ่านห้องเปลี่ยนชุด ไม่ปนกับเส้นทางวัตถุดิบ'});
   s.push({t:'บรรจุ + คลังยาสำเร็จรูป', cl:'PIC/S 5', rooms:['primary_pack','secondary_pack','fg_store'],
     desc:'วางพื้นที่บรรจุปฐมภูมิ/ทุติยภูมิ และคลังยาสำเร็จรูปที่ปลายสาย ให้ผลิตภัณฑ์ไหลออกทิศทางเดียวสู่คลัง'});
@@ -617,7 +832,7 @@ function renderPalette(){
   box.appendChild(goal);
   // grouped chips
   const groups={'คลัง/วัตถุดิบ':CORE_STORE, 'สายการผลิต':[...f.prod,'ipc','primary_pack','secondary_pack'],
-    'แอร์ล็อก/ทางเดิน':['corridor','pal','mal','gowning','gowning_d','gowning_c','gowning_b','bl_airlock'],
+    'แอร์ล็อก/ทางเดิน':['corridor','pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','bl_airlock','hm_airlock','cy_airlock'],
     'ควบคุมคุณภาพ (QC)':['qc_chem','qc_micro','qc_instr','retained'],
     'สวัสดิการ/สนับสนุน':['change_room','toilet','canteen','office','ahu','water_sys','workshop','waste']};
   for(const g in groups){
@@ -666,7 +881,7 @@ function renderRooms(){
   state.placed.forEach(p=>{
     const r=ROOMS[p.id]; if(!r) return;
     const bad=badIds.has(p.id);
-    const d=el('div','room'+(state.sel===p.uid?' sel':'')+(bad?' bad':''));
+    const d=el('div','room'+(state.sel===p.uid?' sel':'')+(bad?' bad':'')+(r.overlay?' overlay':''));
     d.style.left=p.x*CELL+'px'; d.style.top=p.y*CELL+'px';
     d.style.width=p.w*CELL-3+'px'; d.style.height=p.h*CELL-3+'px';
     d.style.background=Z[r.z];
@@ -675,30 +890,146 @@ function renderRooms(){
     d.tabIndex=0; d.setAttribute('role','button');
     d.setAttribute('aria-label', r.th+' — '+ZNAME[r.z]+(r.grade?' เกรด '+r.grade:'')+(bad?' (ผิดกฎ)':''));
     d.title=r.en+' · '+ZNAME[r.z];
-    d.innerHTML=`<span class="zcode">${ZCODE[r.z]||''}</span><div>${r.th}</div><small>${r.en}</small>`+(r.grade?`<span class="grd">${r.grade}</span>`:'')+`<span class="rsz" aria-hidden="true"></span>`;
+    const pr=state.showPressure?computeEnv(p).dP:0;
+    const pbadge=pr!==0?`<span class="pbadge ${pr>0?'pos':'neg'}">${pr>0?'+':''}${pr} Pa</span>`:'';
+    d.innerHTML=`<span class="zcode">${ZCODE[r.z]||''}</span><div>${r.th}</div><small>${r.en}</small>`+(r.grade?`<span class="grd">${r.grade}</span>`:'')+pbadge+`<span class="rsz" aria-hidden="true"></span>`;
     d.dataset.uid=p.uid;
     d.addEventListener('focus',()=>{ state.sel=+d.dataset.uid; [...floor.querySelectorAll('.room')].forEach(n=>n.classList.toggle('sel', n===d)); });
     floor.appendChild(d);
   });
+  renderDoors();
+  renderInspector();
 }
 
+// เรขาคณิตของบานประตูจากห้อง+ด้าน+ทิศเปิด (swing 0-3 = บานพับซ้าย/ขวา × เปิดเข้า/ออก)
+function doorGeom(p,dr){
+  const W=CELL*0.8; let cx,cy,wv,perp;
+  if(dr.side==='top'){ cx=(p.x+dr.frac*p.w)*CELL; cy=p.y*CELL; wv=[1,0]; perp=[0,1]; }
+  else if(dr.side==='bottom'){ cx=(p.x+dr.frac*p.w)*CELL; cy=(p.y+p.h)*CELL; wv=[1,0]; perp=[0,1]; }
+  else if(dr.side==='left'){ cx=p.x*CELL; cy=(p.y+dr.frac*p.h)*CELL; wv=[0,1]; perp=[1,0]; }
+  else { cx=(p.x+p.w)*CELL; cy=(p.y+dr.frac*p.h)*CELL; wv=[0,1]; perp=[1,0]; }
+  const sw=dr.swing||0, hs=(sw<2?-1:1), ps=(sw%2===0?-1:1);
+  const H={x:cx+hs*W/2*wv[0], y:cy+hs*W/2*wv[1]};             // บานพับ (hinge)
+  const Tc={x:H.x-hs*W*wv[0], y:H.y-hs*W*wv[1]};              // ปลายบานตอนปิด (ตามผนัง)
+  const To={x:H.x+ps*W*perp[0], y:H.y+ps*W*perp[1]};         // ปลายบานตอนเปิด (ตั้งฉาก)
+  return {H,To,Tc,W};
+}
+function renderDoors(){
+  doorsvg.innerHTML='';
+  (state.doors||[]).forEach(dr=>{
+    const p=state.placed.find(x=>x.uid===dr.room); if(!p) return;
+    const g=doorGeom(p,dr), {H,To,Tc}=g;
+    const col = dr.interlock?'#6d4fd0':'#2f6fe0';
+    const grp=document.createElementNS(SVGNS,'g'); grp.setAttribute('class','door'); grp.dataset.door=dr.uid;
+    const ti=document.createElementNS(SVGNS,'title'); ti.textContent='ประตู'+(dr.interlock?' (interlock 🔒)':'')+' — คลิกหมุนทิศ · Alt+คลิก interlock · Shift+คลิกลบ'; grp.appendChild(ti);
+    // ส่วนโค้งการเปิด (polyline quarter-arc รอบบานพับ)
+    const R=Math.hypot(To.x-H.x,To.y-H.y);
+    let a0=Math.atan2(To.y-H.y,To.x-H.x), a1=Math.atan2(Tc.y-H.y,Tc.x-H.x), dd=a1-a0;
+    while(dd>Math.PI) dd-=2*Math.PI; while(dd<-Math.PI) dd+=2*Math.PI;
+    let pts=''; for(let i=0;i<=12;i++){ const a=a0+dd*i/12; pts+=(H.x+R*Math.cos(a))+','+(H.y+R*Math.sin(a))+' '; }
+    const arc=document.createElementNS(SVGNS,'polyline'); arc.setAttribute('points',pts.trim());
+    arc.setAttribute('fill','none'); arc.setAttribute('stroke',col); arc.setAttribute('stroke-width','1.3'); arc.setAttribute('stroke-dasharray','3 3'); arc.setAttribute('opacity','.75');
+    grp.appendChild(arc);
+    grp.appendChild(svgLine(H.x,H.y,To.x,To.y,col, dr.interlock?'4':'3',null,'1'));    // บานประตู
+    const c=document.createElementNS(SVGNS,'circle'); c.setAttribute('cx',H.x);c.setAttribute('cy',H.y);c.setAttribute('r','3.4');c.setAttribute('fill',col); grp.appendChild(c);
+    const hit=svgLine(H.x,H.y,To.x,To.y,'transparent','16',null,'1'); hit.setAttribute('class','doorhit'); grp.appendChild(hit);
+    doorsvg.appendChild(grp);
+  });
+}
+
+/* ---------- B1: แผงข้อมูลห้อง (inspector) ---------- */
+function renderInspector(){
+  const box=$('#inspector'); if(!box) return;
+  const p=state.placed.find(x=>x.uid===state.sel);
+  if(!p){ box.innerHTML='<div class="insp-empty">เลือกห้องบนผังเพื่อกำหนด class / อุณหภูมิ / ความชื้น / ความดัน / airflow / ACH / AHU / แสง</div>'; return; }
+  const r=ROOMS[p.id], e=computeEnv(p);
+  const f=(lb,fl,val,at)=>`<label class="insp-f"><span>${lb}</span><input data-f="${fl}" value="${val}" ${at||''}></label>`;
+  box.innerHTML=`<div class="insp-head">${r.th} <small>${r.en}</small></div><div class="insp-grid">`+
+    `<label class="insp-f"><span>Class</span><select data-f="cls">${CLASS_OPTS.map(c=>`<option ${c===e.cls?'selected':''}>${c}</option>`).join('')}</select></label>`+
+    f('T (°C)','T',e.T,'type="number"')+f('RH (%)','RH',e.RH,'type="number"')+
+    f('ΔP (Pa)','dP',e.dP,'type="number"')+f('ACH','ach',e.ach,'type="number"')+
+    `<label class="insp-f"><span>Airflow</span><select data-f="airflow"><option ${e.airflow==='UDAF'?'selected':''}>UDAF</option><option ${e.airflow==='turbulent'?'selected':''}>turbulent</option></select></label>`+
+    f('AHU','ahu',e.ahu,'')+f('Lux','lux',e.lux,'type="number"')+
+    `<label class="insp-f insp-chk"><input type="checkbox" data-f="dust" ${e.dust?'checked':''}><span>มีระบบดูดฝุ่น</span></label>`+
+    `</div>`;
+  box.querySelectorAll('[data-f]').forEach(inp=>inp.addEventListener('change',()=>{
+    const fl=inp.dataset.f, v = inp.type==='checkbox'?inp.checked:(inp.type==='number'?(inp.value===''?'':+inp.value):inp.value);
+    setEnv(p,fl,v); evaluate(); drawFlows();
+  }));
+}
+
+/* ---------- B3: ตารางข้อมูลห้อง (Room Data Schedule) ---------- */
+function scheduleRows(){
+  return state.placed.map(p=>{ const r=ROOMS[p.id], e=computeEnv(p);
+    return {room:r.th, cls:e.cls, T:e.T===''?'–':e.T, RH:e.RH===''?'–':e.RH, dP:e.dP, airflow:e.airflow, ach:e.ach===''?'–':e.ach, ahu:e.ahu||'–', dust:e.dust?'✓':'–', lux:e.lux===''?'–':e.lux}; });
+}
+function scheduleTableHTML(){
+  const head=['ห้อง','Class','T°C','%RH','ΔP(Pa)','Airflow','ACH','AHU','ดูดฝุ่น','Lux'];
+  const rows=scheduleRows();
+  if(!rows.length) return '<div class="insp-empty">ยังไม่มีห้องบนผัง</div>';
+  return `<table class="sched"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`+
+    rows.map(r=>`<tr><td>${r.room}</td><td>${r.cls}</td><td>${r.T}</td><td>${r.RH}</td><td>${r.dP}</td><td>${r.airflow}</td><td>${r.ach}</td><td>${r.ahu}</td><td>${r.dust}</td><td>${r.lux}</td></tr>`).join('')+`</tbody></table>`;
+}
+function updateSchedulePrint(){ const el=$('#schedprint'); if(el) el.innerHTML='<h3>ตารางข้อมูลห้อง (Room Data Schedule)</h3>'+scheduleTableHTML(); }
+
+/* ---------- B4: เช็คลิสต์ F-D3-81 ---------- */
+function fd81Items(){
+  const grd=state.placed.some(p=>ROOMS[p.id]&&ROOMS[p.id].grade);
+  const rule=frag=>{ const r=lastResults.find(x=>x.cl.includes(frag)); return r?r.s:'na'; };
+  const stR=frag=>{ const s=rule(frag); return s==='pass'?'covered':s==='na'?'na':'partial'; };
+  const yn=(b,partial)=>b?'covered':(partial?'partial':'missing');
+  const core=['receiving','quarantine','released','rejected','dispensing','fg_store'];
+  return [
+    {no:'9',  item:'ห้องเปลี่ยนชุด + gowning เข้าพื้นที่ผลิตตามเกรด', st:yn(has('change_room')&&(has('pal')||has('gowning')),false)},
+    {no:'10', item:'ผังผลิต+คลัง ห้องมีชื่อครบ (รับ/กักกัน/สุ่ม/ปล่อยผ่าน/ชั่ง/ผลิต/บรรจุ/QC/FG)', st:yn(prodIds().every(has)&&core.every(has),state.placed.length>0)},
+    {no:'13', item:'HVAC ต่อห้อง: class · T · RH · ΔP · airflow · ACH · dust · HEPA · alarm', st:grd?'partial':'na', note:'กรอกใน “ข้อมูลห้อง” แล้วดู “📋 ตาราง”'},
+    {no:'13a',item:'มี AHU จ่ายอากาศ HEPA ให้พื้นที่สะอาด (ข้อ 41)', st:grd?yn(has('ahu'),false):'na'},
+    {no:'13b',item:'ความดันไล่ 10–15 Pa สูง→ต่ำ (ข้อ 360)', st:stR('ΔP')},
+    {no:'13c',item:'Grade A เป็น unidirectional airflow (ข้อ 310/361)', st:stR('UDAF')},
+    {no:'13d',item:'ระบบดูดฝุ่นในห้องมีฝุ่น (ข้อ 42/43)', st:stR('ดูดฝุ่น')},
+    {no:'14', item:'ระบุ/คุม T · RH · ΔP ในผลิต+คลัง', st:'partial', note:'กรอกใน “ข้อมูลห้อง”'},
+    {no:'16', item:'ผัง QC (เคมี/จุลชีววิทยา) แยกจากผลิต', st:yn(has('qc_chem')&&has('qc_micro'),has('qc_chem')||has('qc_micro'))},
+    {no:'19', item:'ระบบน้ำ PW/WFI', st:yn(has('water_sys'),false)},
+    {no:'P2S-9', item:'แอร์ล็อก/พาสบ็อกซ์ ระหว่างพื้นที่ต่างระดับความสะอาด', st:yn(hasMaterialAirlock(),false)},
+    {no:'P2S-9b', item:'ประตูแอร์ล็อก 2 บาน + interlock (ข้อ 359)', st:stR('interlock')},
+  ];
+}
+function renderFD81(){
+  const ic={covered:'<span class="fd-ic ok">✓</span>',partial:'<span class="fd-ic wa">◐</span>',missing:'<span class="fd-ic er">✕</span>',na:'<span class="fd-ic na">–</span>'};
+  $('#fd81_body').innerHTML=fd81Items().map(r=>`<div class="fd-row">${ic[r.st]||ic.na}<div><b>ข้อ ${r.no}</b> ${r.item}${r.note?`<div class="fd-note">${r.note}</div>`:''}</div></div>`).join('');
+}
+
+const SVGNS='http://www.w3.org/2000/svg';
+function svgLine(x1,y1,x2,y2,stroke,w,marker,op){
+  const ln=document.createElementNS(SVGNS,'line');
+  ln.setAttribute('x1',x1);ln.setAttribute('y1',y1);ln.setAttribute('x2',x2);ln.setAttribute('y2',y2);
+  ln.setAttribute('stroke',stroke);ln.setAttribute('stroke-width',w);if(marker)ln.setAttribute('marker-end','url(#'+marker+')');ln.setAttribute('opacity',op||'.9');
+  return ln;
+}
 function drawFlows(){
-  svg.innerHTML=''; const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
-  const colors={personnel:'#2f6fe0',material:'#159a63',product:'#cf7d0a',waste:'#d6453f'};
+  svg.innerHTML=''; const defs=document.createElementNS(SVGNS,'defs');
+  const colors={personnel:'#2f6fe0',material:'#159a63',product:'#cf7d0a',waste:'#d6453f',pressure:'#5b8a8a'};
   for(const k in colors){
-    const m=document.createElementNS('http://www.w3.org/2000/svg','marker');
+    const m=document.createElementNS(SVGNS,'marker');
     m.id='ar_'+k; m.setAttribute('markerWidth','9');m.setAttribute('markerHeight','9');m.setAttribute('refX','7');m.setAttribute('refY','3');m.setAttribute('orient','auto');
-    const pth=document.createElementNS('http://www.w3.org/2000/svg','path'); pth.setAttribute('d','M0,0 L7,3 L0,6 Z'); pth.setAttribute('fill',colors[k]); m.appendChild(pth); defs.appendChild(m);
+    const pth=document.createElementNS(SVGNS,'path'); pth.setAttribute('d','M0,0 L7,3 L0,6 Z'); pth.setAttribute('fill',colors[k]); m.appendChild(pth); defs.appendChild(m);
   }
   svg.appendChild(defs);
+  // pressure cascade arrows: ทิศอากาศไหลจากห้องความดันสูง → ต่ำ ที่ขอบซึ่งติดกัน
+  if(state.showPressure){
+    const a=state.placed;
+    for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++){
+      if(!touching(a[i],a[j])) continue;
+      const pi=computeEnv(a[i]).dP, pj=computeEnv(a[j]).dP; if(pi===pj) continue;
+      const e=sharedEdge(a[i],a[j]); if(!e) continue;
+      const dir = pi>pj ? e.dir : [-e.dir[0],-e.dir[1]];   // ชี้จากสูงไปต่ำ
+      const L=15;
+      svg.appendChild(svgLine(e.mx-dir[0]*L, e.my-dir[1]*L, e.mx+dir[0]*L, e.my+dir[1]*L, colors.pressure, '3', 'ar_pressure', '.95'));
+    }
+  }
   for(const k in state.flows){ if(!state.flows[k]) continue;
     const pts=flowPath(k); if(pts.length<2) continue;
-    for(let i=0;i<pts.length-1;i++){
-      const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
-      ln.setAttribute('x1',pts[i].x);ln.setAttribute('y1',pts[i].y);ln.setAttribute('x2',pts[i+1].x);ln.setAttribute('y2',pts[i+1].y);
-      ln.setAttribute('stroke',colors[k]);ln.setAttribute('stroke-width','2.5');ln.setAttribute('marker-end','url(#ar_'+k+')');ln.setAttribute('opacity','.9');
-      svg.appendChild(ln);
-    }
+    for(let i=0;i<pts.length-1;i++) svg.appendChild(svgLine(pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y,colors[k],'2.5','ar_'+k,'.9'));
   }
 }
 
@@ -706,7 +1037,7 @@ let lastResults=[];
 function evaluate(){
   const rules=buildRules();
   lastResults=rules.map(r=>{ const out=r.run(); return {th:r.th,cl:r.cl,pr:r.pr||'',s:out.s,d:out.d||'',rooms:out.rooms||[]}; });
-  renderRules(); renderRooms(); renderSteps();
+  renderRules(); renderRooms(); renderSteps(); updateSchedulePrint();
 }
 
 function renderRules(){
@@ -742,9 +1073,22 @@ function renderRules(){
 /* ============================================================
    INTERACTION
    ============================================================ */
-function pushHistory(){ state.history.push(JSON.stringify(state.placed)); if(state.history.length>50) state.history.shift(); }
-function undo(){ if(!state.history.length) return; state.placed=JSON.parse(state.history.pop()); state.sel=null; evaluate(); drawFlows(); }
+function pushHistory(){ state.history.push(JSON.stringify({placed:state.placed,doors:state.doors})); if(state.history.length>50) state.history.shift(); }
+function undo(){ if(!state.history.length) return; const s=JSON.parse(state.history.pop()); state.placed=s.placed||[]; state.doors=s.doors||[]; state.sel=null; evaluate(); drawFlows(); }
 function refocus(uid){ const n=floor.querySelector('.room[data-uid="'+uid+'"]'); if(n) n.focus(); }
+function addDoorAt(p, lx, ly){
+  const fx=Math.max(0,Math.min(1,lx/p.w)), fy=Math.max(0,Math.min(1,ly/p.h));
+  const dT=fy, dB=1-fy, dL=fx, dR=1-fx, m=Math.min(dT,dB,dL,dR);
+  let side,frac;
+  if(m===dT){side='top';frac=fx;} else if(m===dB){side='bottom';frac=fx;}
+  else if(m===dL){side='left';frac=fy;} else {side='right';frac=fy;}
+  frac=Math.min(.85,Math.max(.15,frac));
+  // เปิดเข้าห้องที่คลิกโดยปริยาย (นิสิตคลิกหมุนเปลี่ยนทิศได้ภายหลัง)
+  const swing = (side==='top'||side==='left') ? 1 : 0;
+  pushHistory();
+  state.doors.push({uid:state.uid++,room:p.uid,side,frac,swing,interlock:false});
+  renderDoors();
+}
 
 function freeSpot(w,h){
   for(let y=0;y<=ROWS-h;y++) for(let x=0;x<=COLS-w;x++){
@@ -760,7 +1104,7 @@ function addRoom(id){
   state.sel=state.placed[state.placed.length-1].uid;
   evaluate(); drawFlows();
 }
-function delSel(){ if(state.sel==null)return; pushHistory(); state.placed=state.placed.filter(p=>p.uid!==state.sel); state.sel=null; evaluate(); drawFlows(); }
+function delSel(){ if(state.sel==null)return; pushHistory(); state.placed=state.placed.filter(p=>p.uid!==state.sel); state.doors=state.doors.filter(d=>d.room!==state.sel); state.sel=null; evaluate(); drawFlows(); }
 function rotateSel(){
   const p=state.placed.find(x=>x.uid===state.sel); if(!p)return;
   const nw=p.h, nh=p.w;
@@ -772,6 +1116,20 @@ function rotateSel(){
 // drag (ย้าย) + resize (ปรับขนาด)
 let drag=null, resize=null;
 floor.addEventListener('pointerdown',e=>{
+  // โหมดวางประตู: คลิกประตูเดิม = ลบ, คลิกในห้อง = เพิ่มประตูที่ขอบใกล้สุด
+  if(state.doorMode){
+    const dg=e.target.closest('.door');            // คลิก=หมุนทิศเปิด · Alt+คลิก=สลับ interlock · Shift+คลิก=ลบ
+    if(dg){ const id=+dg.dataset.door; pushHistory();
+      if(e.shiftKey){ state.doors=state.doors.filter(d=>d.uid!==id); }
+      else if(e.altKey){ const dd=state.doors.find(d=>d.uid===id); if(dd) dd.interlock=!dd.interlock; }
+      else { const dd=state.doors.find(d=>d.uid===id); if(dd) dd.swing=((dd.swing||0)+1)%4; }
+      renderDoors(); return; }
+    const rr=e.target.closest('.room'); if(!rr) return;   // คลิกในห้อง: วางประตูที่ขอบใกล้สุด
+    const pp=state.placed.find(x=>x.uid===+rr.dataset.uid); if(!pp) return;
+    const frr=floor.getBoundingClientRect();
+    addDoorAt(pp, (e.clientX-frr.left)/(CELL*zoom)-pp.x, (e.clientY-frr.top)/(CELL*zoom)-pp.y);
+    return;
+  }
   const rd=e.target.closest('.room'); if(!rd)return;
   const uid=+rd.dataset.uid, p=state.placed.find(x=>x.uid===uid); if(!p) return;
   state.sel=uid; renderRooms();
@@ -807,8 +1165,8 @@ floor.addEventListener('pointerup',e=>{
 });
 floor.addEventListener('dblclick',e=>{ const rd=e.target.closest('.room'); if(rd){state.sel=+rd.dataset.uid; delSel();} });
 document.addEventListener('keydown',e=>{
-  const modalOpen = !$('#stepmodal').hidden;
-  if(e.key==='Escape'){ if(modalOpen){ e.preventDefault(); closeStepModal(); } return; }
+  const modalOpen = [...document.querySelectorAll('.modal-back')].some(m=>!m.hidden);
+  if(e.key==='Escape'){ if(modalOpen){ e.preventDefault(); closeAllModals(); } return; }
   if(modalOpen) return;   // ป๊อปอัปเปิดอยู่ — ไม่ย้าย/ลบห้องด้วยคีย์บอร์ด
   if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); undo(); return; }
   const tag=(e.target.tagName||'').toLowerCase();
@@ -836,11 +1194,11 @@ document.addEventListener('keydown',e=>{
 /* ---------- scaffold (ผังเริ่มต้นแบบยังไม่ผ่าน — ให้ไปแก้) ---------- */
 function loadScaffold(){
   pushHistory();
-  state.placed=[]; state.sel=null;
+  state.placed=[]; state.doors=[]; state.sel=null;
   const f=FORMS[state.form]; let x=0,y=0,rh=0, dropped=0;
   const order=[...CORE_STORE, ...f.prod, 'ipc','primary_pack','secondary_pack',
     'corridor','pal','mal','gowning',...(f.sterile?['gowning_d','gowning_c','gowning_b']:[]),
-    ...(f.dedicated?['bl_airlock']:[]),
+    ...(f.dedicated?[f.dedGroup+'_airlock']:[]),
     'qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste'];
   order.filter(id=>f.rooms.includes(id)).forEach(id=>{
     const r=ROOMS[id]; if(x+r.w>COLS){x=0;y+=rh;rh=0;}
@@ -854,7 +1212,7 @@ function loadScaffold(){
 
 /* ---------- export / import ---------- */
 function exportJSON(){
-  const data={form:state.form, placed:state.placed,
+  const data={form:state.form, placed:state.placed, doors:state.doors, schedule:scheduleRows(),
     result:{ score:+$('#gscore').textContent, pass:+$('#passn').textContent, fail:+$('#failn').textContent, warn:+$('#warnn').textContent,
       rules:lastResults.map(r=>({th:r.th,cl:r.cl,s:r.s})) }};
   const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -865,9 +1223,13 @@ $('#import').addEventListener('change',e=>{
   fr.onload=()=>{ try{ const d=JSON.parse(fr.result);
     pushHistory();
     if(FORMS[d.form]){ state.form=d.form; $('#form').value=d.form; }
+    const idmap={};
     state.placed=(Array.isArray(d.placed)?d.placed:[])
       .filter(p=>p&&ROOMS[p.id]&&[p.x,p.y,p.w,p.h].every(n=>Number.isFinite(n)))
-      .map(p=>({id:p.id,x:p.x,y:p.y,w:p.w,h:p.h,uid:state.uid++}));
+      .map(p=>{ const nu=state.uid++; idmap[p.uid]=nu; return {id:p.id,x:p.x,y:p.y,w:p.w,h:p.h,uid:nu}; });
+    state.doors=(Array.isArray(d.doors)?d.doors:[])
+      .filter(dr=>dr&&idmap[dr.room]!=null&&['top','bottom','left','right'].includes(dr.side))
+      .map(dr=>({uid:state.uid++,room:idmap[dr.room],side:dr.side,frac:Number.isFinite(dr.frac)?dr.frac:.5,swing:[0,1,2,3].includes(dr.swing)?dr.swing:0,interlock:!!dr.interlock}));
     state.sel=null;
     renderSteps();renderPalette();evaluate();drawFlows();
   }catch(err){alert('ไฟล์ไม่ถูกต้อง');} };
@@ -876,8 +1238,8 @@ $('#import').addEventListener('change',e=>{
 });
 
 /* ---------- wire up ---------- */
-$('#form').addEventListener('change',e=>{ state.form=e.target.value; state.placed=[]; state.sel=null; state.step=0; state.history=[]; renderSteps();renderPalette();evaluate();drawFlows(); });
-$('#reset').onclick=()=>{ pushHistory(); state.placed=[];state.sel=null; evaluate();drawFlows(); };
+$('#form').addEventListener('change',e=>{ state.form=e.target.value; state.placed=[]; state.doors=[]; state.sel=null; state.step=0; state.history=[]; renderSteps();renderPalette();evaluate();drawFlows(); });
+$('#reset').onclick=()=>{ pushHistory(); state.placed=[]; state.doors=[]; state.sel=null; evaluate();drawFlows(); };
 $('#scaffold').onclick=loadScaffold;
 $('#export').onclick=exportJSON;
 $('#print').onclick=()=>window.print();
@@ -890,9 +1252,18 @@ $('#zoomfit').onclick=fitZoom;
 $('.center').addEventListener('wheel',e=>{ if(!e.ctrlKey)return; e.preventDefault(); zoom+=(e.deltaY<0?.1:-.1); applyZoom(); },{passive:false});
 $('#sm_close').onclick=closeStepModal; $('#sm_ok').onclick=closeStepModal;
 $('#stepmodal').addEventListener('click',e=>{ if(e.target===$('#stepmodal')) closeStepModal(); });
+function closeAllModals(){ document.querySelectorAll('.modal-back').forEach(m=>m.hidden=true); }
+$('#schedbtn').onclick=()=>{ $('#sched_body').innerHTML=scheduleTableHTML(); $('#schedmodal').hidden=false; };
+$('#sched_close').onclick=$('#sched_ok').onclick=closeAllModals;
+$('#schedmodal').addEventListener('click',e=>{ if(e.target===$('#schedmodal')) closeAllModals(); });
+$('#fd81btn').onclick=()=>{ renderFD81(); $('#fd81modal').hidden=false; };
+$('#fd81_close').onclick=$('#fd81_ok').onclick=closeAllModals;
+$('#fd81modal').addEventListener('click',e=>{ if(e.target===$('#fd81modal')) closeAllModals(); });
 ['personnel','material','product','waste'].forEach(k=>{
   $('#f_'+k).addEventListener('change',e=>{ state.flows[k]=e.target.checked; drawFlows(); renderRules(); });
 });
+$('#f_pressure').addEventListener('change',e=>{ state.showPressure=e.target.checked; renderRooms(); drawFlows(); });
+$('#doormode').onclick=()=>{ state.doorMode=!state.doorMode; $('#doormode').classList.toggle('primary',state.doorMode); floor.classList.toggle('doormode',state.doorMode); floor.style.cursor=state.doorMode?'copy':''; renderDoors(); };
 
 /* ---------- boot ---------- */
 initFloor(); renderForm(); renderSteps(); renderPalette(); evaluate(); drawFlows();

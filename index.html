@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharma Plant Layout Builder — เกมวางผังโรงงานยาตาม GMP/PIC/S</title>
+<style>
+  :root{
+    --bg:#eef1f6; --panel:#ffffff; --panel2:#f2f5fa; --line:#dbe2ec;
+    --ink:#1c2836; --muted:#64748b; --accent:#2f6fe0; --accent2:#6d4fd0;
+    --ok:#159a63; --warn:#cf7d0a; --err:#d6453f; --na:#94a3b4;
+    --shadow:0 1px 2px rgba(28,40,54,.06),0 1px 3px rgba(28,40,54,.05);
+    --shadow-lg:0 10px 34px rgba(28,40,54,.14);
+    /* zone legend/accent colours — the strong (border) tone of each zone */
+    --black:#5b6675; --grey:#4f7cb8; --white:#7fa9dd; --store:#4f9e74;
+  }
+  *{box-sizing:border-box;font-family:"Segoe UI",Tahoma,"Noto Sans Thai",system-ui,sans-serif}
+  body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:8px}
+  .app{display:grid;grid-template-columns:272px 1fr 328px;grid-template-rows:54px 1fr 176px;height:100vh}
+  header{grid-column:1/4;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:0 18px;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+  header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.2px}
+  header .sub{font-size:11px;color:var(--muted)}
+  header .spacer{flex:1}
+  .hdr-ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  select,.btn{background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:7px 11px;border-radius:8px;font-size:12.5px}
+  .btn{box-shadow:var(--shadow)}
+  .btn:hover{background:#eef3fb;border-color:#c3d2e6}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .btn.primary:hover{background:#245cc4}
+  .btn.ghost{background:transparent;box-shadow:none}
+  .col{overflow-y:auto;padding:14px}
+  ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#c6d0dd;border-radius:5px}::-webkit-scrollbar-thumb:hover{background:#b2bfcf}
+  :focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+  .chip:focus-visible,.btn:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* LEFT */
+  .left{background:var(--panel);border-right:1px solid var(--line)}
+  .steps{list-style:none;margin:0 0 16px;padding:0;counter-reset:s}
+  .step{display:flex;gap:10px;padding:10px 11px;border-radius:10px;margin-bottom:6px;background:var(--panel2);border:1px solid var(--line);cursor:pointer;transition:border-color .12s,background .12s}
+  .step:hover{border-color:#b9cbe6;background:#eef3fb}
+  .step.active{border-color:var(--accent);background:#eaf1fc;box-shadow:0 0 0 1px var(--accent) inset}
+  .step .num{counter-increment:s;min-width:22px;height:22px;border-radius:50%;background:#dde5f1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#4a5b72}
+  .step .num::before{content:counter(s)}
+  .step.active .num{background:var(--accent);color:#fff}
+  .step.done .num{background:var(--ok);color:#fff}
+  .step.done .num::before{content:"✓"}
+  .step .t{font-size:12.5px;line-height:1.4}
+  .sech{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;margin:4px 0 8px}
+  .palette{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:12px;background:var(--panel);border:1px solid var(--line);color:var(--ink);box-shadow:var(--shadow)}
+  .chip:hover{background:#eef3fb;border-color:#b9cbe6}
+  .chip .dot{width:10px;height:10px;border-radius:3px;flex:none}
+  .chip.dim{opacity:.42}
+  .grp{margin-bottom:10px}
+  /* CENTER */
+  .center{position:relative;background:#e7ecf3;overflow:auto;overscroll-behavior:contain}
+  .toolbar{position:sticky;top:0;z-index:6;display:flex;gap:8px;align-items:center;padding:9px 12px;background:#ffffffee;border-bottom:1px solid var(--line);backdrop-filter:blur(6px);flex-wrap:wrap}
+  .toggle{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 9px;border-radius:7px;background:var(--panel);border:1px solid var(--line);cursor:pointer}
+  .toggle input{accent-color:var(--accent)}
+  .zoomctl{display:flex;gap:2px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px;box-shadow:var(--shadow)}
+  .zbtn{padding:4px 8px;min-width:30px;box-shadow:none;border:1px solid transparent;background:transparent;font-size:14px;line-height:1}
+  .zbtn:hover{background:#e9f0fa;border-color:transparent}
+  #zoomlvl{font-variant-numeric:tabular-nums;font-size:12px;min-width:40px;display:inline-block;text-align:center}
+  .layouttype{font-size:11.5px;color:var(--muted);padding:8px 12px;background:#eaf1fb;border-bottom:1px solid var(--line);line-height:1.5}
+  .layouttype b{color:#2b5db8;font-weight:600}
+  .floorwrap{padding:28px;min-width:max-content}
+  .floor{position:relative;background:
+      linear-gradient(#e6ecf5 1px,transparent 1px),
+      linear-gradient(90deg,#e6ecf5 1px,transparent 1px);
+      background-color:#ffffff;border:2px solid #cbd6e5;border-radius:8px;box-shadow:var(--shadow-lg)}
+  .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa8bb;font-size:14px;pointer-events:none;text-align:center;padding:20px;line-height:1.7}
+  .room{position:absolute;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:11px;text-align:center;color:#1e2a3a;cursor:grab;user-select:none;overflow:hidden;padding:2px;border:1.5px solid #cbd6e5;box-shadow:0 1px 4px rgba(28,40,54,.12);touch-action:none}
+  .room small{font-size:9px;opacity:.7;line-height:1.1}
+  .room .grd{position:absolute;top:2px;right:4px;font-size:9px;font-weight:800;background:rgba(28,40,54,.14);color:#1e2a3a;padding:0 4px;border-radius:6px}
+  .room .zcode{position:absolute;top:2px;left:4px;font-size:8.5px;font-weight:800;background:rgba(28,40,54,.12);color:#1e2a3a;padding:0 4px;border-radius:6px;letter-spacing:.3px}
+  .room .rsz{position:absolute;right:1px;bottom:1px;width:14px;height:14px;cursor:nwse-resize;border-right:3px solid var(--accent);border-bottom:3px solid var(--accent);border-bottom-right-radius:5px;opacity:.4;touch-action:none}
+  .room:hover .rsz,.room.sel .rsz{opacity:1}
+  .room.sel{outline:2.5px solid var(--accent);outline-offset:1px;box-shadow:0 0 0 4px rgba(47,111,224,.24),0 4px 14px rgba(28,40,54,.2);z-index:5}
+  .room:focus-visible{outline:3px solid var(--accent2);outline-offset:2px;z-index:6}
+  .room.bad{border-color:var(--err)!important;box-shadow:0 0 0 2px var(--err),0 2px 8px rgba(28,40,54,.14)}
+  .svgflow{position:absolute;inset:0;pointer-events:none;z-index:4}
+  /* RIGHT */
+  .right{background:var(--panel);border-left:1px solid var(--line)}
+  .score{display:flex;align-items:center;gap:14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .gauge{--v:0;width:66px;height:66px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;
+    background:conic-gradient(var(--ok) calc(var(--v)*1%),#e3e9f2 0)}
+  .gauge span{width:52px;height:52px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+  #gscore::after{content:"%";font-size:.5em;font-weight:600;opacity:.6;vertical-align:super;margin-left:1px}
+  .scmeta{font-size:12px;color:var(--muted);line-height:1.55}
+  .scmeta b{color:var(--ink)}
+  .rule{display:flex;gap:9px;padding:10px;border-radius:9px;margin-bottom:6px;background:var(--panel);border:1px solid var(--line);font-size:12px;line-height:1.4;box-shadow:var(--shadow)}
+  .rule .ic{width:18px;height:18px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;margin-top:1px;color:#fff}
+  .rule.pass .ic{background:var(--ok)} .rule.fail .ic{background:var(--err);color:#fff} .rule.na .ic{background:var(--na);color:#fff}
+  .rule.warn .ic{background:var(--warn)}
+  .rule .cl{display:inline-block;font-size:10px;color:#2b5db8;background:#e8f0fb;border:1px solid #c6dbf4;padding:1px 5px;border-radius:5px;margin-top:3px}
+  .rule .pr{display:inline-block;font-size:10px;color:#5a44b0;background:#efe9fb;border:1px solid #ddd2f5;padding:1px 5px;border-radius:5px;margin:3px 0 0 5px}
+  .rule.pass{background:#f5faf7} .rule.fail{background:#fdf3f2;border-color:#f2cdca} .rule.warn{background:#fdf8ef}
+  .rule .detail{color:var(--muted);font-size:11px}
+  .rule.na{opacity:.66}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 10px;font-size:11px;color:var(--muted);margin-top:6px}
+  .legend i{width:16px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
+  .banner{padding:9px 11px;border-radius:9px;font-size:12px;margin-bottom:12px;display:none}
+  .banner.win{display:block;background:#e5f6ec;border:1px solid #9bdcb8;color:#0f7147;font-weight:600}
+  .stepgoal{background:#eaf1fc;border:1px solid #c5d8f2;border-radius:10px;padding:11px;font-size:12.5px;line-height:1.5;margin-bottom:12px}
+  .stepgoal .cl{display:inline-block;font-size:10px;color:#2b5db8;background:#dbe8fa;border:1px solid #c0d6f2;padding:1px 6px;border-radius:5px;margin-top:5px}
+  /* BOTTOM BAR (คลังห้อง) */
+  .bottombar{grid-column:1/4;grid-row:3;background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:stretch;height:176px;box-shadow:0 -2px 10px rgba(28,40,54,.05)}
+  .bar-label{flex:none;width:96px;padding:12px;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;font-size:12.5px;font-weight:700;color:var(--ink);background:var(--panel2)}
+  .bar-label span{font-size:10px;font-weight:400;color:var(--muted);margin-top:4px;line-height:1.3}
+  #palette{flex:1;display:flex;align-items:flex-start;gap:0;overflow-x:auto;overflow-y:hidden;padding:12px 6px}
+  #palette .stepgoal{margin:0 14px 0 6px;width:224px;flex:none;align-self:stretch}
+  #palette .grp{margin:0;flex:none;padding:0 14px;border-left:1px solid var(--line)}
+  #palette .grp .sech{margin:2px 0 7px}
+  #palette .palette{max-width:300px}
+  /* step pop-up */
+  .modal-back{position:fixed;inset:0;background:rgba(24,34,52,.42);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .modal-back[hidden]{display:none}
+  .modal{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 24px 22px;max-width:450px;width:100%;box-shadow:0 24px 64px rgba(28,40,54,.28);animation:pop .16s ease-out}
+  @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  @media (prefers-reduced-motion:reduce){.modal{animation:none}}
+  .modal-x{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:8px;background:var(--panel2);color:var(--muted);font-size:14px;border:1px solid var(--line)}
+  .modal-x:hover{background:#e9f0fa;color:var(--ink)}
+  .sm-badge{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+  .modal h3{margin:0 0 8px;font-size:16px;line-height:1.45}
+  .modal .cl{display:inline-block;font-size:10px;color:#2b5db8;background:#e8f0fb;border:1px solid #c6dbf4;padding:1px 6px;border-radius:5px}
+  .sm-desc{color:var(--muted);font-size:13px;line-height:1.65;margin:12px 0 16px}
+  .sm-roomlabel{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px}
+  .sm-rooms{display:flex;flex-wrap:wrap;gap:6px}
+  .sm-rooms .rchip{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:12px;background:var(--panel);border:1px solid var(--line);color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
+  .sm-rooms .rchip:hover{background:#eef3fb;border-color:#b9cbe6}
+  .sm-rooms .rchip.placed{opacity:.5}
+  .sm-rooms .rchip .dot{width:10px;height:10px;border-radius:3px;flex:none}
+  .sm-actions{margin-top:20px;display:flex;justify-content:flex-end}
+  /* responsive: stack panels on small screens */
+  @media (max-width:1100px){
+    body{overflow:auto}
+    .app{grid-template-columns:1fr;grid-template-rows:none;height:auto;min-height:100vh}
+    header{position:sticky;top:0;z-index:30;grid-column:1}
+    .left,.center,.right,.bottombar{grid-column:1;grid-row:auto}
+    .left,.right,.bottombar{border-right:none;border-left:none;border-bottom:1px solid var(--line)}
+    .center{min-height:56vh}
+    .bottombar{height:auto;max-height:44vh;overflow:auto}
+  }
+  @media print{.left,.toolbar,.hdr-ctrl,.layouttype,.bottombar{display:none!important}.app{grid-template-columns:1fr 320px}.center{overflow:visible}body{overflow:visible;height:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>🏭 Pharma Plant Layout Builder</h1>
+    </div>
+    <div class="spacer"></div>
+    <span class="hdr-ctrl">
+      <label class="sub" for="form">รูปแบบยา:</label>
+      <select id="form"></select>
+      <button class="btn" id="scaffold" title="โหลดผังตัวอย่างที่ยังไม่ผ่าน GMP แล้วลองหาและแก้จุดผิด">โหลดผังเริ่มต้น</button>
+      <button class="btn" id="reset">ล้าง</button>
+      <button class="btn" id="export">บันทึก JSON</button>
+      <label class="btn ghost" style="cursor:pointer">โหลด JSON<input id="import" type="file" accept="application/json" hidden></label>
+      <button class="btn" id="print">พิมพ์/PDF</button>
+    </span>
+  </header>
+
+  <!-- LEFT -->
+  <aside class="col left">
+    <div class="sech">ขั้นตอนการออกแบบ</div>
+    <ol class="steps" id="steps"></ol>
+    <div class="sech">โซนความสะอาด</div>
+    <div class="legend">
+      <div><i style="background:var(--black)"></i>Black — ทั่วไป (B)</div>
+      <div><i style="background:var(--grey)"></i>Grey — ควบคุม (G)</div>
+      <div><i style="background:var(--white)"></i>Classified — สะอาด (W)</div>
+      <div><i style="background:var(--store)"></i>คลัง/สนับสนุน (S)</div>
+    </div>
+  </aside>
+
+  <!-- CENTER -->
+  <main class="center">
+    <div class="toolbar">
+      <span style="font-size:12px;color:var(--muted)">การไหล (Flow):</span>
+      <label class="toggle"><input type="checkbox" id="f_personnel"><span style="color:#2f6fe0">● คน</span></label>
+      <label class="toggle"><input type="checkbox" id="f_material"><span style="color:#159a63">● วัตถุดิบ</span></label>
+      <label class="toggle"><input type="checkbox" id="f_product"><span style="color:#cf7d0a">● ผลิตภัณฑ์</span></label>
+      <label class="toggle"><input type="checkbox" id="f_waste"><span style="color:#d6453f">● ของเสีย</span></label>
+      <span style="flex:1"></span>
+      <div class="zoomctl">
+        <button class="btn zbtn" id="zoomout" title="ซูมออก" aria-label="ซูมออก">−</button>
+        <button class="btn zbtn" id="zoomreset" title="รีเซ็ต 100%"><span id="zoomlvl">100%</span></button>
+        <button class="btn zbtn" id="zoomin" title="ซูมเข้า" aria-label="ซูมเข้า">+</button>
+        <button class="btn zbtn" id="zoomfit" title="พอดีจอ" aria-label="พอดีจอ">⤢</button>
+      </div>
+      <button class="btn" id="rotate" title="หมุนห้องที่เลือก (คีย์ลัด: R)">หมุนห้อง ⟲</button>
+      <button class="btn" id="undo" title="ย้อนกลับ (คีย์ลัด: Ctrl+Z)">↶ ย้อน</button>
+      <button class="btn" id="del" title="ลบห้องที่เลือก (คีย์ลัด: Delete)">ลบห้องที่เลือก 🗑</button>
+      <button class="btn primary" id="check">ตรวจ GMP ✓</button>
+    </div>
+    <div class="layouttype">โครงสร้างผัง: สายการผลิตเรียงต่อเนื่อง = <b>Product layout</b> · กลุ่ม QC/สนับสนุน = <b>Process layout</b> · รวมทั้งผัง = <b>Combination layout</b></div>
+    <div class="floorwrap">
+      <div class="floor" id="floor">
+        <svg class="svgflow" id="svg"></svg>
+        <div class="hint" id="hint">เลือกรูปแบบยา แล้วคลิกห้องจากคลังด้านซ้ายเพื่อเริ่มวางผัง<br>หรือกด “โหลดผังเริ่มต้น” เพื่อโหลดผังตัวอย่างที่ยังไม่ผ่าน GMP แล้วหาและแก้จุดผิด<br><span style="font-size:12px">ลาก/ลูกศรเพื่อย้าย · ลากมุมขวาล่าง (หรือ Shift+ลูกศร) ปรับขนาด · R หมุน · Delete ลบ · Ctrl+Z ย้อน · Ctrl+ล้อเมาส์ หรือปุ่ม −/+ ซูม</span></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT -->
+  <aside class="col right">
+    <div class="banner win" id="win">🎉 เยี่ยมมาก! ผังนี้วางห้องผลิตครบและผ่านข้อกำหนดหลักทั้งหมดแล้ว</div>
+    <div class="score">
+      <div class="gauge" id="gauge"><span id="gscore">0</span></div>
+      <div class="scmeta">
+        <div>คะแนน GMP Compliance</div>
+        <div><b id="passn">0</b> ผ่าน · <b id="failn" style="color:var(--err)">0</b> ต้องแก้ · <b id="warnn" style="color:var(--warn)">0</b> ควรปรับ · <b id="nan" style="color:var(--muted)">0</b> ยังไม่ประเมิน</div>
+        <div id="completenote" style="color:var(--muted)"></div>
+        <div id="crossnote" style="color:var(--warn)"></div>
+      </div>
+    </div>
+    <div class="sech">รายการตรวจ (อ้างอิง GMP ข้อ / PIC/S)</div>
+    <div id="rules"></div>
+  </aside>
+
+  <!-- BOTTOM BAR: คลังห้อง / พื้นที่ -->
+  <div class="bottombar">
+    <div class="bar-label">คลังห้อง<span>คลิกเพื่อวางลงผัง</span></div>
+    <div id="palette"></div>
+  </div>
+</div>
+
+<!-- STEP POP-UP -->
+<div class="modal-back" id="stepmodal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sm_title">
+    <button class="modal-x" id="sm_close" aria-label="ปิด">✕</button>
+    <div class="sm-badge" id="sm_num">1</div>
+    <h3 id="sm_title"></h3>
+    <span class="cl" id="sm_cl"></span>
+    <p class="sm-desc" id="sm_desc"></p>
+    <div class="sm-roomlabel" id="sm_roomlabel">ห้องที่ต้องวางในขั้นนี้ (คลิกเพื่อวางลงผัง):</div>
+    <div class="sm-rooms" id="sm_rooms"></div>
+    <div class="sm-actions"><button class="btn primary" id="sm_ok">เข้าใจแล้ว เริ่มขั้นนี้</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   Pharma Plant Layout Builder
+   สอน pharmaceutical plant layout แบบลงมือทำ + เช็ค GMP/PIC/S สด
+   ============================================================ */
+const CELL = 34, COLS = 40, ROWS = 24;
+let zoom = 1;                       // ระดับการซูมของพื้นที่วางผัง
+const gradeRank = {A:4, B:3, C:2, D:1};
+
+/* ---------- ห้อง / พื้นที่ทั้งหมด ---------- */
+// zone: black(ทั่วไป) / grey(ควบคุม-ผลิต non-sterile) / white(classified) / store(คลัง) / air(airlock) / util
+// Z = สีพื้นห้อง (โทนอ่อนสำหรับพื้นหลังสว่าง), ZB = สีขอบ/จุดสัญลักษณ์ (โทนเข้มของแต่ละโซน)
+const Z  = {black:'#dde2e8', grey:'#d3ddee', white:'#eef5fd', store:'#d7ecdf', air:'#f7e8ca', util:'#e7ddf3'};
+const ZB = {black:'#5b6675', grey:'#4f7cb8', white:'#7fa9dd', store:'#4f9e74', air:'#cf9a34', util:'#8a68b3'};
+const ZCODE = {black:'B', grey:'G', white:'W', store:'S', air:'AL', util:'U'};
+const ZNAME = {black:'โซนทั่วไป (Black)', grey:'โซนควบคุม (Grey)', white:'โซนสะอาด (Classified)', store:'คลัง/สนับสนุน', air:'แอร์ล็อก/ทางเดิน', util:'ระบบสนับสนุน'};
+const ROOMS = {
+  receiving:   {th:'รับวัตถุดิบ', en:'Receiving', z:'store', w:3,h:2},
+  quarantine:  {th:'กักกัน (Quarantine)', en:'Quarantine', z:'store', w:3,h:2},
+  sampling:    {th:'สุ่มตัวอย่าง', en:'Sampling booth', z:'grey', w:2,h:2},
+  released:    {th:'คลังปล่อยผ่าน', en:'Released store', z:'store', w:3,h:2},
+  rejected:    {th:'ของไม่ผ่าน/รอทำลาย', en:'Rejected', z:'store', w:2,h:2},
+  dispensing:  {th:'ชั่ง/จ่ายวัตถุดิบ', en:'Dispensing', z:'grey', w:3,h:2},
+  fg_store:    {th:'คลังยาสำเร็จรูป', en:'FG store', z:'store', w:3,h:2},
+  // OSD
+  granulation: {th:'แกรนูล', en:'Granulation', z:'grey', w:3,h:2},
+  drying:      {th:'อบแห้ง', en:'Drying', z:'grey', w:2,h:2},
+  blending:    {th:'ผสม', en:'Blending', z:'grey', w:2,h:2},
+  compression: {th:'ตอกเม็ด', en:'Compression', z:'grey', w:3,h:2},
+  coating:     {th:'เคลือบ', en:'Coating', z:'grey', w:2,h:2},
+  // liquid
+  sol_prep:    {th:'เตรียมสารละลาย', en:'Solution prep', z:'grey', w:3,h:2},
+  fill_liquid: {th:'บรรจุของเหลว', en:'Liquid filling', z:'grey', w:3,h:2},
+  // semisolid
+  mix_semi:    {th:'ผสมครีม/ขี้ผึ้ง', en:'Semisolid mixing', z:'grey', w:3,h:2},
+  fill_tube:   {th:'บรรจุหลอด', en:'Tube filling', z:'grey', w:3,h:2},
+  // sterile
+  comp_ster:   {th:'เตรียมสารละลาย (C)', en:'Compounding', z:'white', w:3,h:2, grade:'C'},
+  filtration:  {th:'กรองปลอดเชื้อ', en:'Filtration', z:'white', w:2,h:2, grade:'C'},
+  fill_asept:  {th:'บรรจุปลอดเชื้อ (A in B)', en:'Aseptic filling', z:'white', w:3,h:2, grade:'A'},
+  fill_term:   {th:'บรรจุก่อนฆ่าเชื้อ (C)', en:'Filling', z:'white', w:3,h:2, grade:'C'},
+  autoclave:   {th:'ฆ่าเชื้อขั้นสุดท้าย', en:'Terminal steriliser', z:'grey', w:2,h:2},
+  lyo:         {th:'ทำแห้งเยือกแข็ง', en:'Lyophiliser', z:'white', w:2,h:2, grade:'A'},
+  capping:     {th:'ปิดผนึก', en:'Capping', z:'white', w:2,h:2, grade:'C'},
+  gowning_d:   {th:'เปลี่ยนชุดเข้า D', en:'Gowning →D', z:'air', w:2,h:1, grade:'D'},
+  gowning_c:   {th:'เปลี่ยนชุดเข้า C', en:'Gowning →C', z:'air', w:2,h:1, grade:'C'},
+  gowning_b:   {th:'เปลี่ยนชุดเข้า B', en:'Gowning →B', z:'air', w:2,h:1, grade:'B'},
+  // beta-lactam
+  bl_granul:   {th:'แกรนูล β-lactam', en:'β-lactam granulation', z:'grey', w:3,h:2, bl:true},
+  bl_compress: {th:'ตอกเม็ด β-lactam', en:'β-lactam compression', z:'grey', w:3,h:2, bl:true},
+  bl_pack:     {th:'บรรจุ β-lactam', en:'β-lactam packing', z:'grey', w:3,h:2, bl:true},
+  bl_airlock:  {th:'แอร์ล็อก β-lactam (AHU แยก)', en:'Dedicated airlock', z:'air', w:2,h:2, bl:true},
+  // shared production tail
+  ipc:         {th:'ควบคุมระหว่างผลิต (IPC)', en:'In-process control', z:'grey', w:2,h:2},
+  primary_pack:{th:'บรรจุปฐมภูมิ', en:'Primary packaging', z:'grey', w:3,h:2},
+  secondary_pack:{th:'บรรจุทุติยภูมิ', en:'Secondary pack', z:'black', w:3,h:2},
+  // airlocks & circulation
+  corridor:    {th:'ทางเดิน', en:'Corridor', z:'air', w:4,h:1},
+  pal:         {th:'Personnel Airlock', en:'PAL / gowning', z:'air', w:2,h:2},
+  mal:         {th:'Material Airlock', en:'MAL / pass box', z:'air', w:2,h:1},
+  gowning:     {th:'ห้องเปลี่ยนชุด', en:'Change room', z:'air', w:2,h:2},
+  // QC
+  qc_chem:     {th:'แล็บเคมี', en:'QC chemistry', z:'store', w:3,h:2},
+  qc_micro:    {th:'แล็บจุลชีววิทยา', en:'QC microbiology', z:'store', w:3,h:2},
+  qc_instr:    {th:'ห้องเครื่องมือ', en:'Instruments', z:'store', w:2,h:2},
+  retained:    {th:'เก็บตัวอย่างสำรอง', en:'Retained samples', z:'store', w:2,h:2},
+  // welfare / utilities
+  change_room: {th:'ห้องเปลี่ยนเสื้อผ้า', en:'Locker/change', z:'black', w:2,h:2},
+  toilet:      {th:'ห้องน้ำ', en:'Toilet', z:'black', w:2,h:1},
+  canteen:     {th:'โรงอาหาร/ห้องพัก', en:'Canteen/rest', z:'black', w:3,h:2},
+  office:      {th:'สำนักงาน', en:'Office', z:'black', w:3,h:2},
+  ahu:         {th:'เครื่องปรับอากาศ (AHU)', en:'HVAC / AHU', z:'util', w:3,h:2},
+  water_sys:   {th:'ระบบน้ำ (PW/WFI)', en:'Water system', z:'util', w:2,h:2},
+  workshop:    {th:'ซ่อมบำรุง', en:'Workshop', z:'util', w:2,h:2},
+  waste:       {th:'จัดการของเสีย', en:'Waste', z:'util', w:2,h:2},
+};
+
+/* ---------- ชุดห้องต่อรูปแบบยา + ลำดับการผลิต ---------- */
+const CORE_STORE = ['receiving','quarantine','sampling','released','rejected','dispensing','fg_store'];
+const CORE_SUP = ['corridor','pal','mal','gowning','qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste','ipc','primary_pack','secondary_pack'];
+
+const FORMS = {
+  osd: {name:'ยาเม็ด/แคปซูล (OSD, non-sterile)', sterile:false,
+    prod:['granulation','drying','blending','compression','coating'],
+    rooms:[...CORE_STORE,'granulation','drying','blending','compression','coating',...CORE_SUP]},
+  liquid: {name:'ยาน้ำรับประทาน (non-sterile)', sterile:false,
+    prod:['sol_prep','fill_liquid'],
+    rooms:[...CORE_STORE,'sol_prep','fill_liquid',...CORE_SUP]},
+  semisolid: {name:'ครีม/ขี้ผึ้ง (Semisolid)', sterile:false,
+    prod:['mix_semi','fill_tube'],
+    rooms:[...CORE_STORE,'mix_semi','fill_tube',...CORE_SUP]},
+  sterile_term: {name:'ยาปราศจากเชื้อ — ฆ่าเชื้อขั้นสุดท้าย', sterile:true,
+    prod:['comp_ster','fill_term','autoclave','capping'],
+    rooms:[...CORE_STORE,'comp_ster','fill_term','autoclave','capping','gowning_d','gowning_c',...CORE_SUP]},
+  sterile_asept: {name:'ยาปราศจากเชื้อ — กระบวนการปลอดเชื้อ (Aseptic)', sterile:true, aseptic:true,
+    prod:['comp_ster','filtration','fill_asept','lyo','capping'],
+    rooms:[...CORE_STORE,'comp_ster','filtration','fill_asept','lyo','capping','gowning_d','gowning_c','gowning_b',...CORE_SUP]},
+  betalactam: {name:'β-lactam เฉพาะสาย (Dedicated)', sterile:false, dedicated:true,
+    prod:['bl_granul','bl_compress','bl_pack'],
+    rooms:[...CORE_STORE,'bl_granul','bl_compress','bl_pack','bl_airlock',...CORE_SUP]},
+};
+
+/* ---------- กลุ่มอ้างอิงสำหรับกฎ ---------- */
+const AIRLOCKS = ['pal','mal','gowning','gowning_d','gowning_c','gowning_b','corridor','bl_airlock'];
+const GOWNINGS = ['pal','gowning','gowning_d','gowning_c','gowning_b'];
+const BLACK = ['receiving','secondary_pack','change_room','toilet','canteen','office','workshop','waste'];
+const WELFARE_KEEPAWAY = ['toilet','canteen'];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = { form:'osd', placed:[], sel:null, step:0, uid:1, history:[],
+  flows:{personnel:false,material:false,product:false,waste:false} };
+
+/* ============================================================
+   GEOMETRY / ENGINE
+   ============================================================ */
+function prodIds(){ return FORMS[state.form].prod; }
+function rectsOf(id){ return state.placed.filter(p=>p.id===id); }
+function has(id){ return rectsOf(id).length>0; }
+function touching(a,b){
+  const ax2=a.x+a.w, ay2=a.y+a.h, bx2=b.x+b.w, by2=b.y+b.h;
+  const ovX = a.x<bx2 && b.x<ax2, ovY = a.y<by2 && b.y<ay2;
+  if(ovX && ovY) return false;                             // ทับกัน = ไม่นับว่าติดกัน (เป็นความผิดต่างหาก)
+  const horiz=(ax2===b.x||bx2===a.x)&&ovY;                 // ชิดซ้าย-ขวา
+  const vert =(ay2===b.y||by2===a.y)&&ovX;                 // ชิดบน-ล่าง
+  return horiz||vert;
+}
+function adjIds(idA,idB){
+  const A=rectsOf(idA), B=rectsOf(idB);
+  for(const a of A) for(const b of B) if(a!==b && touching(a,b)) return true;
+  return false;
+}
+function adjAny(id,list){ return list.some(x=>x!==id && adjIds(id,x)); }
+// ห้องผลิตทุกห้องที่วางแล้ว
+function placedProd(){ return prodIds().filter(has); }
+// ห้องผลิตห้องใดห้องหนึ่งติดกับกลุ่ม list ไหม
+function prodAdjAny(list){ return placedProd().some(pid=>adjAny(pid,list)); }
+// ตรวจการซ้อนทับ
+function rectsOverlap(a,b){ return a.x<b.x+b.w && b.x<a.x+a.w && a.y<b.y+b.h && b.y<a.y+a.h; }
+function overlapsAt(uid,x,y,w,h){ return state.placed.some(p=>p.uid!==uid && rectsOverlap({x,y,w,h},p)); }
+function overlappingIds(){
+  const s=new Set(), a=state.placed;
+  for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++) if(rectsOverlap(a[i],a[j])){ s.add(a[i].id); s.add(a[j].id); }
+  return [...s];
+}
+
+/* ---------- กฎ (คืน pass/fail/warn/na) ---------- */
+function buildRules(){
+  const f = FORMS[state.form], R=[];
+
+  // ผังต้องไม่ซ้อนกัน — กันการ "โกง" ด้วยการวางห้องทับกัน
+  R.push({cl:'ผังต้องไม่ซ้อนกัน', pr:'Space Utilization', th:'ห้องไม่วางซ้อนทับกัน — แต่ละพื้นที่ต้องแยกกายภาพ',
+    run:()=>{ const ov=overlappingIds(); return ov.length?
+      {s:'fail',d:'มีห้องวางทับกัน แต่ละห้องต้องเป็นพื้นที่แยกจากกัน (ลากให้ไม่ทับ)',rooms:ov}:{s:'pass'}; }});
+
+  R.push({cl:'ข้อ 47 / PIC/S 3.18–3.22', pr:'Overall Integration', th:'มีพื้นที่จัดเก็บครบ: กักกัน / ปล่อยผ่าน / ของไม่ผ่าน',
+    run:()=> (has('quarantine')&&has('released')&&has('rejected'))?{s:'pass'}:
+       {s:'fail',d:'ต้องแยกพื้นที่วัตถุดิบตามสถานะ เพื่อกัน mix-up'}});
+
+  // ความครบถ้วน — กันการ "โกง" ด้วยการลบห้องผลิตออก
+  R.push({cl:'ความครบถ้วนของผัง', pr:'Overall Integration', th:'วางห้องผลิตครบทุกขั้นตามรูปแบบยา',
+    run:()=>{ const miss=prodIds().filter(id=>!has(id));
+      return miss.length?{s:'fail',d:'ยังขาดห้องผลิต: '+miss.map(id=>ROOMS[id].th).join(', ')}:{s:'pass'}; }});
+
+  R.push({cl:'ข้อ 47 / PIC/S 3.22', pr:'Safety', th:'ของไม่ผ่าน (Rejected) แยกจากคลังปล่อยผ่าน',
+    run:()=> (!has('rejected')||!has('released'))?{s:'na'}:
+       (!adjIds('rejected','released')?{s:'pass'}:{s:'warn',d:'ควรกันบริเวณ/แยกให้ชัด',rooms:['rejected','released']})});
+
+  R.push({cl:'containment · แอร์ล็อก', pr:'Smooth Flow', th:'ห้องชั่ง/จ่ายวัตถุดิบ เข้าถึงผ่านแอร์ล็อก',
+    run:()=> !has('dispensing')?{s:'na'}:
+       (adjAny('dispensing',AIRLOCKS)?{s:'pass'}:{s:'fail',d:'ต่อ MAL/ทางเดิน/ห้องเปลี่ยนชุดคั่น ไม่ให้เปิดตรงสู่ภายนอก',rooms:['dispensing']})});
+
+  R.push({cl:'PIC/S 3.x · บุคลากร', pr:'Smooth Flow', th:'บุคลากรเข้าสู่พื้นที่ผลิตผ่าน PAL / ห้องเปลี่ยนชุด',
+    run:()=> placedProd().length===0?{s:'na'}:
+       (prodAdjAny(GOWNINGS)?{s:'pass'}:{s:'fail',d:'ต้องมี Personnel Airlock/ห้องเปลี่ยนชุดติดกับสายการผลิต',rooms:placedProd()})});
+
+  R.push({cl:'"NO OUTSIDE IN / NO INSIDE OUT"', pr:'Safety', th:'พื้นที่ผลิตไม่ติดพื้นที่ทั่วไป/ภายนอกโดยตรง (กันทั้งขาเข้า–ขาออก)',
+    run:()=> placedProd().length===0?{s:'na'}:
+       (()=>{ const bad=placedProd().filter(pid=>adjAny(pid,BLACK));
+         return bad.length?{s:'fail',d:'ห้องผลิตชนพื้นที่ black (รับของ/บรรจุนอก/ห้องน้ำ ฯลฯ) — ต้องมีแอร์ล็อกคั่น ทั้งทางคน วัตถุดิบ และของเสีย',rooms:bad}:{s:'pass'}; })()});
+
+  R.push({cl:'ข้อ 55 / PIC/S 3.26', pr:'Safety', th:'ห้องจุลชีววิทยา (Micro) แยกจากพื้นที่ผลิต',
+    run:()=> !has('qc_micro')?{s:'na'}:
+       (()=>{ const bad=placedProd().filter(pid=>adjIds('qc_micro',pid));
+         return bad.length?{s:'fail',d:'ห้อง micro ห้ามติดพื้นที่ผลิต (เสี่ยงปนเปื้อนข้าม)',rooms:['qc_micro',...bad]}:{s:'pass'}; })()});
+
+  R.push({cl:'ข้อ 55 / PIC/S 3.26', pr:'Safety', th:'ห้องปฏิบัติการ QC แยกจากบริเวณผลิต',
+    run:()=> !has('qc_chem')?{s:'na'}:
+       (placedProd().some(pid=>adjIds('qc_chem',pid))?{s:'warn',d:'ควรแยก QC ออกจากสายผลิต',rooms:['qc_chem']}:{s:'pass'})});
+
+  R.push({cl:'ข้อ 60 / PIC/S 3.31', pr:'Safety', th:'ห้องน้ำ/โรงอาหาร ไม่เปิดตรงสู่พื้นที่ผลิตหรือจัดเก็บ',
+    run:()=>{ const rel=[...placedProd(),'dispensing','sampling','released','quarantine'].filter(has);
+       const badset=new Set();
+       WELFARE_KEEPAWAY.filter(has).forEach(w=>{ rel.forEach(r=>{ if(adjIds(w,r)){ badset.add(w); badset.add(r); } }); });
+       return WELFARE_KEEPAWAY.some(has)?(badset.size?{s:'fail',d:'ห้องน้ำ/โรงอาหารติดพื้นที่ผลิต/จัดเก็บ',rooms:[...badset]}:{s:'pass'}):{s:'na'}; }});
+
+  R.push({cl:'ข้อ 36 · Minimum Movement', pr:'Minimum Movement · Smooth Flow', th:'สายการผลิตเรียงต่อเนื่องทิศเดียว (unidirectional)',
+    run:()=>{ const seq=prodIds().filter(has); if(seq.length<2) return {s:'na'};
+       const bad=[]; for(let i=0;i<seq.length-1;i++){ if(!adjIds(seq[i],seq[i+1])){ bad.push(seq[i],seq[i+1]); } }
+       return bad.length?{s:'warn',d:'ห้องผลิตควรเรียงติดกันตามลำดับ ไม่ให้งานย้อนทาง',rooms:[...new Set(bad)]}:{s:'pass'};}});
+
+  if(!f.sterile){
+    R.push({cl:'Material flow', pr:'Smooth Flow', th:'มี Material Airlock คั่นระหว่างคลัง↔ผลิต',
+      run:()=> placedProd().length===0?{s:'na'}:
+         (has('mal')||has('bl_airlock')?{s:'pass'}:{s:'warn',d:'ควรมี MAL/pass box ส่งวัตถุดิบเข้าโดยไม่ปนทางคน'})});
+  }
+
+  R.push({cl:'GMP ของเสีย', pr:'Safety', th:'มีเส้นทางของเสียแยก ไม่ตัดผ่านพื้นที่สะอาด',
+    run:()=> !has('waste')?{s:'na'}:
+       (placedProd().some(pid=>adjIds('waste',pid))?{s:'warn',d:'พื้นที่ของเสียไม่ควรติดห้องผลิตโดยตรง',rooms:['waste']}:{s:'pass'})});
+
+  // ---- Sterile ----
+  if(f.sterile){
+    R.push({cl:'ข้อ 310 / Annex 1', pr:'Safety', th:'มีห้องเปลี่ยนชุดแบบขั้น (gowning cascade)',
+      run:()=>{ const need = f.aseptic?['gowning_d','gowning_c','gowning_b']:['gowning_d','gowning_c'];
+        const miss=need.filter(id=>!has(id));
+        return miss.length?{s:'fail',d:'เข้าห้องสะอาดต้องผ่านห้องเปลี่ยนชุดเป็นขั้น: '+need.map(id=>ROOMS[id].th).join(' → ')}:{s:'pass'};}});
+
+    R.push({cl:'GMP ข้อ 308', pr:'Smooth Flow', th:'สายปลอดเชื้อ: วัตถุดิบ/วัสดุบรรจุเข้าผ่าน Material Airlock',
+      run:()=> has('mal')||has('bl_airlock')?{s:'pass'}:
+        {s:'fail',d:'ทางเข้าเครื่องมือ/วัตถุดิบสู่พื้นที่ปลอดเชื้อต้องผ่านแอร์ล็อก (ไม่มี = ข้อบกพร่องสำคัญ)'}});
+
+    R.push({cl:'ข้อ 311 / Annex 1 (pressure cascade)', pr:'Safety', th:'ห้องสะอาดที่ติดกันต้องต่างเกรดไม่เกิน 1 ระดับ (ไม่มี C ชน A)',
+      run:()=>{ const g=state.placed.filter(p=>ROOMS[p.id]&&ROOMS[p.id].grade), bad=new Set();
+        for(let i=0;i<g.length;i++) for(let j=i+1;j<g.length;j++){
+          if(touching(g[i],g[j]) && Math.abs(gradeRank[ROOMS[g[i].id].grade]-gradeRank[ROOMS[g[j].id].grade])>=2){ bad.add(g[i].id); bad.add(g[j].id); } }
+        return bad.size?{s:'fail',d:'ห้องต่างเกรดเกิน 1 ระดับติดกันโดยตรง ต้องมีห้องเกรดกลาง/แอร์ล็อกคั่นตาม pressure cascade',rooms:[...bad]}:{s:'pass'};}});
+
+    R.push({cl:'ข้อ 311 / Annex 1 (cascade)', pr:'Safety', th:'บริเวณเกรดสูงไม่ชน Black/สกปรกโดยตรง',
+      run:()=>{ const core=[f.aseptic?'fill_asept':'fill_term','comp_ster','filtration','lyo','capping'].filter(has);
+        if(!core.length) return {s:'na'};
+        const bad=core.filter(c=>adjAny(c,BLACK)||adjAny(c,['receiving','dispensing','fg_store']));
+        return bad.length?{s:'fail',d:'ห้องสะอาดชนพื้นที่ที่สกปรกกว่าโดยตรง — ต้องมีเกรด/แอร์ล็อกคั่นตาม pressure cascade',rooms:bad}:{s:'pass'};}});
+
+    if(f.aseptic) R.push({cl:'ข้อ 311 / Annex 1 (A in B)', pr:'Safety', th:'จุดบรรจุปลอดเชื้อ (A) เข้าถึงผ่านห้องเปลี่ยนชุดเกรด B',
+      run:()=> !has('fill_asept')?{s:'na'}:
+        (adjAny('fill_asept',['gowning_b'])?{s:'pass'}
+          :{s:'fail',d:'Grade A ต้องอยู่ใน background B และเข้าถึงผ่าน gowning B โดยตรง',rooms:['fill_asept']})});
+  }
+  // ---- β-lactam ----
+  if(f.dedicated){
+    R.push({cl:'GMP ข้อ 35 / Dedicated', pr:'Safety', th:'สาย β-lactam แยกเด็ดขาด (ติดเฉพาะห้อง β-lactam/แอร์ล็อก)',
+      run:()=>{ const bl=['bl_granul','bl_compress','bl_pack'].filter(has); if(!bl.length) return {s:'na'};
+        const others = state.placed.map(p=>p.id).filter(id=>ROOMS[id] && !ROOMS[id].bl && !AIRLOCKS.includes(id));
+        const bad=bl.filter(b=>others.some(o=>adjIds(b,o)));
+        return bad.length?{s:'fail',d:'β-lactam ห้ามติดสาย/ห้องอื่น ต้องแยกอาคาร/โซน + AHU + ระบบน้ำแยก (ข้อ 35 ใช้กับ cephalosporin/ฮอร์โมน/cytotoxic/ชีววัตถุด้วย)',rooms:bad}:{s:'pass'};}});
+    R.push({cl:'GMP ข้อ 35 / AHU + น้ำแยก', pr:'Safety', th:'มีแอร์ล็อกเฉพาะ (AHU/ระบบน้ำแยก) เข้าสาย β-lactam',
+      run:()=> ['bl_granul','bl_compress','bl_pack'].some(has)?
+        (has('bl_airlock')?{s:'pass'}:{s:'fail',d:'ต้องมีแอร์ล็อกเฉพาะกันการฟุ้งข้ามสาย',rooms:['bl_granul','bl_compress','bl_pack'].filter(has)}):{s:'na'}});
+  }
+  return R;
+}
+
+/* ---------- flow crossover ---------- */
+function segInt(p1,p2,p3,p4){
+  const d=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+  const d1=d(p3,p4,p1),d2=d(p3,p4,p2),d3=d(p1,p2,p3),d4=d(p1,p2,p4);
+  return ((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0));
+}
+function flowPath(kind){
+  const f=FORMS[state.form];
+  let seq;
+  // วัตถุดิบจบที่ "ทางเข้าสายผลิต" (ห้องแรก) — การเดินต่อในสายเป็นหน้าที่ของ product flow
+  if(kind==='material') seq=['receiving','quarantine','sampling','released','mal','dispensing',f.prod[0]];
+  else if(kind==='product') seq=[...f.prod,'ipc','primary_pack','secondary_pack','fg_store'];
+  else if(kind==='personnel') seq=['change_room','pal','gowning', ...(f.sterile?['gowning_d','gowning_c','gowning_b']:[]), ...f.prod];
+  // ของเสีย = ทางออกสั้นจากปลายสายผลิต ไม่ย้อนทะลุสายสะอาด (NO INSIDE OUT)
+  else seq=[f.prod[f.prod.length-1],'waste'];
+  const pts=[];
+  seq.filter(has).forEach(id=>{ const r=rectsOf(id)[0]; pts.push({x:(r.x+r.w/2)*CELL,y:(r.y+r.h/2)*CELL,id}); });
+  return pts;
+}
+function crossCount(a,b){
+  let n=0;
+  for(let i=0;i<a.length-1;i++) for(let j=0;j<b.length-1;j++){
+    if(a[i].id===b[j].id||a[i+1].id===b[j+1].id||a[i].id===b[j+1].id||a[i+1].id===b[j].id) continue;
+    if(segInt(a[i],a[i+1],b[j],b[j+1])) n++;
+  }
+  return n;
+}
+function anyCross(){ return crossCount(flowPath('material'),flowPath('personnel')); }
+// เส้นของเสียต้องไม่ตัดเส้นทางคน/วัตถุดิบ/ผลิตภัณฑ์
+function wasteCross(){
+  const w=flowPath('waste'); if(w.length<2) return 0;
+  return crossCount(w,flowPath('personnel'))+crossCount(w,flowPath('material'))+crossCount(w,flowPath('product'));
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const $=s=>document.querySelector(s), el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const floor=$('#floor'), svg=$('#svg');
+
+function initFloor(){
+  floor.style.width=(COLS*CELL)+'px'; floor.style.height=(ROWS*CELL)+'px';
+  floor.style.backgroundSize=CELL+'px '+CELL+'px';
+  floor.style.transformOrigin='0 0';
+  svg.setAttribute('viewBox',`0 0 ${COLS*CELL} ${ROWS*CELL}`);
+}
+
+/* ---------- zoom ---------- */
+function applyZoom(){
+  zoom=Math.max(.4,Math.min(2,Math.round(zoom*100)/100));
+  floor.style.transform='scale('+zoom+')';
+  const wrap=$('.floorwrap');
+  wrap.style.width=(COLS*CELL*zoom+56)+'px';
+  wrap.style.height=(ROWS*CELL*zoom+56)+'px';
+  const z=$('#zoomlvl'); if(z) z.textContent=Math.round(zoom*100)+'%';
+}
+function fitZoom(){
+  const c=$('.center');
+  const availW=c.clientWidth-44, availH=c.clientHeight-44;
+  zoom=Math.min(availW/(COLS*CELL), availH/(ROWS*CELL), 1.5);
+  applyZoom();
+}
+
+function renderForm(){
+  const sel=$('#form'); sel.innerHTML='';
+  for(const k in FORMS){ const o=el('option'); o.value=k; o.textContent=FORMS[k].name; sel.appendChild(o); }
+  sel.value=state.form;
+}
+
+function stepList(){
+  const f=FORMS[state.form];
+  const s=[
+    {t:'คลังวัตถุดิบ + การไหลของวัตถุดิบ (รับ→กักกัน→สุ่ม→ปล่อยผ่าน)', cl:'ข้อ 47 / PIC/S 3.18–3.22', rooms:['receiving','quarantine','sampling','released','rejected'],
+      desc:'วางพื้นที่รับและจัดเก็บวัตถุดิบ โดยแยกตามสถานะให้ชัด (กักกัน / ปล่อยผ่าน / ไม่ผ่าน) เพื่อกันการหยิบผิด (mix-up) และการปนเปื้อนข้าม'},
+    {t:'ห้องชั่ง/จ่าย + Material Airlock', cl:'containment', rooms:['dispensing','mal'],
+      desc:'วางห้องชั่ง/จ่ายวัตถุดิบ และให้เข้าถึงผ่าน Material Airlock (MAL) ไม่เปิดตรงสู่ภายนอก เพื่อควบคุมการฟุ้งกระจายของผง'},
+    {t:'วางสายการผลิตตามลำดับ (ทิศเดียว)', cl:'ข้อ 36 · Minimum Movement', rooms:[...f.prod,'ipc'],
+      desc:'เรียงห้องผลิตให้ต่อเนื่องทิศทางเดียว (unidirectional) ตามลำดับกระบวนการ ไม่ให้งานย้อนทาง — ตรงกับหลัก Minimum Movement + Smooth Flow'},
+  ];
+  if(f.sterile) s.push({t:'จัดลำดับเกรดห้องสะอาด + gowning cascade ('+(f.aseptic?'D→C→B→A':'D→C')+')', cl:'ข้อ 310–311 / Annex 1', rooms:['gowning_d','gowning_c','gowning_b','comp_ster','filtration','fill_asept','fill_term','lyo','capping'],
+    desc:'ไล่เกรดความสะอาดจากสกปรกไปสะอาด ('+(f.aseptic?'D→C→B→A':'D→C')+') ห้องต่างเกรดห้ามติดกันเกิน 1 ระดับ และเข้าห้องสะอาดต้องผ่านห้องเปลี่ยนชุด (gowning) เป็นขั้น ๆ'});
+  if(f.dedicated) s.push({t:'แยกสาย β-lactam เด็ดขาด + แอร์ล็อก/AHU/น้ำแยก', cl:'GMP ข้อ 35', rooms:['bl_granul','bl_compress','bl_pack','bl_airlock'],
+    desc:'สาย β-lactam ต้องแยกออกจากทุกสาย ต้องมีแอร์ล็อก/AHU/ระบบน้ำเฉพาะ — หลักเดียวกันนี้ (ข้อ 35) ใช้กับ cephalosporin, ฮอร์โมน, cytotoxic และชีววัตถุด้วย'});
+  s.push({t:'ทางเดิน + Personnel Airlock (คนเข้าทางเดียว)', cl:'PIC/S 3.x', rooms:['corridor','pal','gowning','change_room'],
+    desc:'จัดทางเดินและ Personnel Airlock ให้บุคลากรเข้าสู่พื้นที่ผลิตทางเดียว ผ่านห้องเปลี่ยนชุด ไม่ปนกับเส้นทางวัตถุดิบ'});
+  s.push({t:'บรรจุ + คลังยาสำเร็จรูป', cl:'PIC/S 5', rooms:['primary_pack','secondary_pack','fg_store'],
+    desc:'วางพื้นที่บรรจุปฐมภูมิ/ทุติยภูมิ และคลังยาสำเร็จรูปที่ปลายสาย ให้ผลิตภัณฑ์ไหลออกทิศทางเดียวสู่คลัง'});
+  s.push({t:'QC — แยกห้องจุลชีววิทยาออกจากผลิต', cl:'ข้อ 55 / PIC/S 6', rooms:['qc_chem','qc_micro','qc_instr','retained'],
+    desc:'แยกห้องปฏิบัติการ QC ออกจากพื้นที่ผลิต โดยเฉพาะห้องจุลชีววิทยา (Micro) ที่ห้ามติดพื้นที่ผลิตเพื่อกันการปนเปื้อนข้าม'});
+  s.push({t:'สวัสดิการ + ระบบสนับสนุน (อย่าให้ชนพื้นที่ผลิต)', cl:'ข้อ 60 / PIC/S 3.30–3.31', rooms:['toilet','canteen','office','ahu','water_sys','workshop','waste'],
+    desc:'วางสวัสดิการและระบบสนับสนุน โดยห้องน้ำ/โรงอาหารต้องไม่เปิดตรงสู่พื้นที่ผลิตหรือจัดเก็บ'});
+  s.push({t:'เปิด overlay การไหล → ตรวจ crossover → แก้จุด ❌', cl:'ตรวจสอบ', rooms:[],
+    desc:'เปิดชั้นการไหล (คน/วัตถุดิบ/ผลิตภัณฑ์/ของเสีย) เพื่อดูจุดที่เส้นทางตัดกัน แล้วปรับตำแหน่งห้องให้เส้นทางคนกับวัตถุดิบไม่ไขว้กัน'});
+  return s;
+}
+
+function stepDone(st){
+  const rel=st.rooms.filter(id=>FORMS[state.form].rooms.includes(id));
+  return rel.length>0 && rel.every(has);
+}
+
+function renderSteps(){
+  const box=$('#steps'); box.innerHTML=''; const steps=stepList();
+  steps.forEach((st,i)=>{
+    const done = stepDone(st);
+    const li=el('li','step'+(i===state.step?' active':'')+(done?' done':'')); li.onclick=()=>{state.step=i;renderSteps();renderPalette();showStepModal(i);};
+    li.innerHTML=`<div class="num"></div><div class="t">${st.t}</div>`;
+    box.appendChild(li);
+  });
+}
+
+function renderPalette(){
+  const box=$('#palette'); box.innerHTML='';
+  const f=FORMS[state.form], steps=stepList(), cur=steps[state.step];
+  // step goal card
+  const goal=el('div','stepgoal');
+  goal.innerHTML=`🎯 <b>ขั้นที่ ${state.step+1}:</b> ${cur.t} <span class="cl">${cur.cl}</span>`;
+  box.appendChild(goal);
+  // grouped chips
+  const groups={'คลัง/วัตถุดิบ':CORE_STORE, 'สายการผลิต':[...f.prod,'ipc','primary_pack','secondary_pack'],
+    'แอร์ล็อก/ทางเดิน':['corridor','pal','mal','gowning','gowning_d','gowning_c','gowning_b','bl_airlock'],
+    'ควบคุมคุณภาพ (QC)':['qc_chem','qc_micro','qc_instr','retained'],
+    'สวัสดิการ/สนับสนุน':['change_room','toilet','canteen','office','ahu','water_sys','workshop','waste']};
+  for(const g in groups){
+    const ids=groups[g].filter(id=>f.rooms.includes(id));
+    if(!ids.length) continue;
+    const gd=el('div','grp'); gd.innerHTML=`<div class="sech" style="margin:2px 0 6px">${g}</div>`;
+    const wrap=el('div','palette');
+    ids.forEach(id=>{
+      const r=ROOMS[id], c=el('button','chip'+(cur.rooms.length&&!cur.rooms.includes(id)?' dim':''));
+      c.innerHTML=`<span class="dot" style="background:${ZB[r.z]}"></span>${r.th}`;
+      c.title=r.en; c.onclick=()=>addRoom(id);
+      wrap.appendChild(c);
+    });
+    gd.appendChild(wrap); box.appendChild(gd);
+  }
+}
+
+/* ---------- step pop-up ---------- */
+function showStepModal(i){
+  const steps=stepList(), st=steps[i]; if(!st) return;
+  $('#sm_num').textContent=i+1;
+  $('#sm_title').textContent=st.t;
+  $('#sm_cl').textContent=st.cl;
+  $('#sm_desc').textContent=st.desc||'';
+  const rl=$('#sm_roomlabel'), rb=$('#sm_rooms'); rb.innerHTML='';
+  const ids=st.rooms.filter(id=>FORMS[state.form].rooms.includes(id));
+  if(!ids.length){ rl.style.display='none'; }
+  else{ rl.style.display='block';
+    ids.forEach(id=>{ const r=ROOMS[id], placed=has(id);
+      const c=el('button','rchip'+(placed?' placed':''));
+      c.innerHTML=`<span class="dot" style="background:${ZB[r.z]}"></span>${r.th}${placed?' ✓':''}`;
+      c.title=placed?'วางแล้ว':'คลิกเพื่อวาง '+r.en;
+      c.onclick=()=>{ addRoom(id); showStepModal(i); };   // วางแล้วรีเฟรชสถานะในป๊อปอัป
+      rb.appendChild(c);
+    });
+  }
+  $('#stepmodal').hidden=false;
+  $('#sm_ok').focus();
+}
+function closeStepModal(){ $('#stepmodal').hidden=true; }
+
+function renderRooms(){
+  [...floor.querySelectorAll('.room')].forEach(n=>n.remove());
+  $('#hint').style.display=state.placed.length?'none':'flex';
+  const badIds=new Set(); lastResults.filter(r=>r.s==='fail').forEach(r=>{(r.rooms||[]).forEach(x=>badIds.add(x));});
+  state.placed.forEach(p=>{
+    const r=ROOMS[p.id]; if(!r) return;
+    const bad=badIds.has(p.id);
+    const d=el('div','room'+(state.sel===p.uid?' sel':'')+(bad?' bad':''));
+    d.style.left=p.x*CELL+'px'; d.style.top=p.y*CELL+'px';
+    d.style.width=p.w*CELL-3+'px'; d.style.height=p.h*CELL-3+'px';
+    d.style.background=Z[r.z];
+    d.style.borderColor=ZB[r.z];
+    d.style.color='#1e2a3a';
+    d.tabIndex=0; d.setAttribute('role','button');
+    d.setAttribute('aria-label', r.th+' — '+ZNAME[r.z]+(r.grade?' เกรด '+r.grade:'')+(bad?' (ผิดกฎ)':''));
+    d.title=r.en+' · '+ZNAME[r.z];
+    d.innerHTML=`<span class="zcode">${ZCODE[r.z]||''}</span><div>${r.th}</div><small>${r.en}</small>`+(r.grade?`<span class="grd">${r.grade}</span>`:'')+`<span class="rsz" aria-hidden="true"></span>`;
+    d.dataset.uid=p.uid;
+    d.addEventListener('focus',()=>{ state.sel=+d.dataset.uid; [...floor.querySelectorAll('.room')].forEach(n=>n.classList.toggle('sel', n===d)); });
+    floor.appendChild(d);
+  });
+}
+
+function drawFlows(){
+  svg.innerHTML=''; const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  const colors={personnel:'#2f6fe0',material:'#159a63',product:'#cf7d0a',waste:'#d6453f'};
+  for(const k in colors){
+    const m=document.createElementNS('http://www.w3.org/2000/svg','marker');
+    m.id='ar_'+k; m.setAttribute('markerWidth','9');m.setAttribute('markerHeight','9');m.setAttribute('refX','7');m.setAttribute('refY','3');m.setAttribute('orient','auto');
+    const pth=document.createElementNS('http://www.w3.org/2000/svg','path'); pth.setAttribute('d','M0,0 L7,3 L0,6 Z'); pth.setAttribute('fill',colors[k]); m.appendChild(pth); defs.appendChild(m);
+  }
+  svg.appendChild(defs);
+  for(const k in state.flows){ if(!state.flows[k]) continue;
+    const pts=flowPath(k); if(pts.length<2) continue;
+    for(let i=0;i<pts.length-1;i++){
+      const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+      ln.setAttribute('x1',pts[i].x);ln.setAttribute('y1',pts[i].y);ln.setAttribute('x2',pts[i+1].x);ln.setAttribute('y2',pts[i+1].y);
+      ln.setAttribute('stroke',colors[k]);ln.setAttribute('stroke-width','2.5');ln.setAttribute('marker-end','url(#ar_'+k+')');ln.setAttribute('opacity','.9');
+      svg.appendChild(ln);
+    }
+  }
+}
+
+let lastResults=[];
+function evaluate(){
+  const rules=buildRules();
+  lastResults=rules.map(r=>{ const out=r.run(); return {th:r.th,cl:r.cl,pr:r.pr||'',s:out.s,d:out.d||'',rooms:out.rooms||[]}; });
+  renderRules(); renderRooms(); renderSteps();
+}
+
+function renderRules(){
+  const box=$('#rules'); box.innerHTML='';
+  let pass=0,fail=0,warn=0,na=0,appl=0;
+  lastResults.forEach(r=>{
+    if(r.s!=='na') appl++; else na++;
+    if(r.s==='pass')pass++; if(r.s==='fail')fail++; if(r.s==='warn')warn++;
+    const d=el('div','rule '+r.s);
+    const ic={pass:'✓',fail:'✕',warn:'!',na:'–'}[r.s];
+    const hint = r.d ? `<div class="detail">${r.d}</div>` : (r.s==='na'?'<div class="detail">ยังไม่ประเมิน — วางห้องที่เกี่ยวข้องก่อน</div>':'');
+    const pr = r.pr?`<span class="pr">${r.pr}</span>`:'';
+    d.innerHTML=`<div class="ic">${ic}</div><div><div>${r.th}</div>${hint}<span class="cl">${r.cl}</span>${pr}</div>`;
+    box.appendChild(d);
+  });
+  const score=appl? Math.round(100*pass/appl):0;
+  $('#gscore').textContent=score; $('#gauge').style.setProperty('--v',score);
+  const col=score>=85?'var(--ok)':score>=55?'var(--warn)':'var(--err)';
+  $('#gauge').style.background=`conic-gradient(${col} calc(var(--v)*1%),#e3e9f2 0)`;
+  $('#passn').textContent=pass; $('#failn').textContent=fail; $('#warnn').textContent=warn; $('#nan').textContent=na;
+  const req=prodIds(), reqPlaced=req.filter(has).length;
+  $('#completenote').textContent = req.length? `ห้องผลิต: วางแล้ว ${reqPlaced}/${req.length} ขั้น` : '';
+  const cross=anyCross(), wcross=wasteCross();
+  const flowsHidden = !state.flows.personnel || !state.flows.material;
+  const notes=[];
+  if(cross) notes.push(`⚠ เส้นทางคน↔วัตถุดิบตัดกัน ${cross} จุด`+(flowsHidden?' (เปิดชั้นคน/วัตถุดิบเพื่อดู)':''));
+  if(wcross) notes.push(`⚠ เส้นทางของเสียตัดเส้นทางอื่น ${wcross} จุด`);
+  $('#crossnote').textContent = notes.join(' · ');
+  const allProd = req.length? req.every(has) : true;
+  $('#win').classList.toggle('win', fail===0 && appl>3 && allProd);
+}
+
+/* ============================================================
+   INTERACTION
+   ============================================================ */
+function pushHistory(){ state.history.push(JSON.stringify(state.placed)); if(state.history.length>50) state.history.shift(); }
+function undo(){ if(!state.history.length) return; state.placed=JSON.parse(state.history.pop()); state.sel=null; evaluate(); drawFlows(); }
+function refocus(uid){ const n=floor.querySelector('.room[data-uid="'+uid+'"]'); if(n) n.focus(); }
+
+function freeSpot(w,h){
+  for(let y=0;y<=ROWS-h;y++) for(let x=0;x<=COLS-w;x++){
+    if(!overlapsAt(-1,x,y,w,h)) return {x,y};
+  }
+  return {x:0,y:0};
+}
+function addRoom(id){
+  const r=ROOMS[id]; if(!r) return;
+  pushHistory();
+  const {x,y}=freeSpot(r.w,r.h);
+  state.placed.push({uid:state.uid++,id,x,y,w:r.w,h:r.h});
+  state.sel=state.placed[state.placed.length-1].uid;
+  evaluate(); drawFlows();
+}
+function delSel(){ if(state.sel==null)return; pushHistory(); state.placed=state.placed.filter(p=>p.uid!==state.sel); state.sel=null; evaluate(); drawFlows(); }
+function rotateSel(){
+  const p=state.placed.find(x=>x.uid===state.sel); if(!p)return;
+  const nw=p.h, nh=p.w;
+  const nx=Math.min(p.x,COLS-nw), ny=Math.min(p.y,ROWS-nh);
+  if(nx<0||ny<0||overlapsAt(p.uid,nx,ny,nw,nh)) return;   // หมุนแล้วจะทับ/ล้น → ไม่หมุน
+  pushHistory(); p.w=nw; p.h=nh; p.x=nx; p.y=ny; evaluate(); drawFlows();
+}
+
+// drag (ย้าย) + resize (ปรับขนาด)
+let drag=null, resize=null;
+floor.addEventListener('pointerdown',e=>{
+  const rd=e.target.closest('.room'); if(!rd)return;
+  const uid=+rd.dataset.uid, p=state.placed.find(x=>x.uid===uid); if(!p) return;
+  state.sel=uid; renderRooms();
+  const fr=floor.getBoundingClientRect();
+  try{ floor.setPointerCapture(e.pointerId); }catch(_){}
+  if(e.target.classList.contains('rsz')){                 // ลากมุมขวาล่าง = ปรับขนาด
+    resize={p,sx:e.clientX,sy:e.clientY,w0:p.w,h0:p.h,moved:false};
+  }else{                                                  // ลากตัวห้อง = ย้าย
+    drag={p,offx:e.clientX-fr.left-p.x*CELL*zoom,offy:e.clientY-fr.top-p.y*CELL*zoom,moved:false};
+  }
+});
+floor.addEventListener('pointermove',e=>{
+  if(resize){ e.preventDefault();
+    let nw=resize.w0+Math.round((e.clientX-resize.sx)/(CELL*zoom)), nh=resize.h0+Math.round((e.clientY-resize.sy)/(CELL*zoom));
+    nw=Math.max(1,Math.min(COLS-resize.p.x,nw)); nh=Math.max(1,Math.min(ROWS-resize.p.y,nh));
+    if((nw!==resize.p.w||nh!==resize.p.h) && !overlapsAt(resize.p.uid,resize.p.x,resize.p.y,nw,nh)){
+      if(!resize.moved){ pushHistory(); resize.moved=true; }
+      resize.p.w=nw; resize.p.h=nh; renderRooms(); drawFlows();
+    }
+    return;
+  }
+  if(!drag)return; e.preventDefault();
+  const fr=floor.getBoundingClientRect();
+  let nx=Math.round((e.clientX-fr.left-drag.offx)/(CELL*zoom)), ny=Math.round((e.clientY-fr.top-drag.offy)/(CELL*zoom));
+  nx=Math.max(0,Math.min(COLS-drag.p.w,nx)); ny=Math.max(0,Math.min(ROWS-drag.p.h,ny));
+  if((nx!==drag.p.x||ny!==drag.p.y) && !overlapsAt(drag.p.uid,nx,ny,drag.p.w,drag.p.h)){
+    if(!drag.moved){ pushHistory(); drag.moved=true; }
+    drag.p.x=nx; drag.p.y=ny; renderRooms(); drawFlows();
+  }
+});
+floor.addEventListener('pointerup',e=>{
+  if(resize||drag){ try{ floor.releasePointerCapture(e.pointerId); }catch(_){} resize=null; drag=null; evaluate(); }
+});
+floor.addEventListener('dblclick',e=>{ const rd=e.target.closest('.room'); if(rd){state.sel=+rd.dataset.uid; delSel();} });
+document.addEventListener('keydown',e=>{
+  const modalOpen = !$('#stepmodal').hidden;
+  if(e.key==='Escape'){ if(modalOpen){ e.preventDefault(); closeStepModal(); } return; }
+  if(modalOpen) return;   // ป๊อปอัปเปิดอยู่ — ไม่ย้าย/ลบห้องด้วยคีย์บอร์ด
+  if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); undo(); return; }
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='select'||tag==='textarea') return;
+  if(state.sel==null) return;
+  const p=state.placed.find(x=>x.uid===state.sel); if(!p) return;
+  if(e.key==='r'||e.key==='R'){ e.preventDefault(); rotateSel(); refocus(state.sel); return; }
+  if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); delSel(); return; }
+  const isArrow = e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown';
+  if(!isArrow) return;
+  e.preventDefault();
+  if(e.shiftKey){                                         // Shift+ลูกศร = ปรับขนาด
+    let nw=p.w, nh=p.h;
+    if(e.key==='ArrowRight')nw++; else if(e.key==='ArrowLeft')nw--; else if(e.key==='ArrowDown')nh++; else nh--;
+    nw=Math.max(1,Math.min(COLS-p.x,nw)); nh=Math.max(1,Math.min(ROWS-p.y,nh));
+    if((nw!==p.w||nh!==p.h) && !overlapsAt(p.uid,p.x,p.y,nw,nh)){ pushHistory(); p.w=nw; p.h=nh; evaluate(); drawFlows(); refocus(p.uid); }
+    return;
+  }
+  let dx=0,dy=0;                                          // ลูกศร = ย้าย
+  if(e.key==='ArrowLeft')dx=-1; else if(e.key==='ArrowRight')dx=1; else if(e.key==='ArrowUp')dy=-1; else dy=1;
+  const nx=Math.max(0,Math.min(COLS-p.w,p.x+dx)), ny=Math.max(0,Math.min(ROWS-p.h,p.y+dy));
+  if((nx!==p.x||ny!==p.y) && !overlapsAt(p.uid,nx,ny,p.w,p.h)){ pushHistory(); p.x=nx; p.y=ny; evaluate(); drawFlows(); refocus(p.uid); }
+});
+
+/* ---------- scaffold (ผังเริ่มต้นแบบยังไม่ผ่าน — ให้ไปแก้) ---------- */
+function loadScaffold(){
+  pushHistory();
+  state.placed=[]; state.sel=null;
+  const f=FORMS[state.form]; let x=0,y=0,rh=0, dropped=0;
+  const order=[...CORE_STORE, ...f.prod, 'ipc','primary_pack','secondary_pack',
+    'corridor','pal','mal','gowning',...(f.sterile?['gowning_d','gowning_c','gowning_b']:[]),
+    ...(f.dedicated?['bl_airlock']:[]),
+    'qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste'];
+  order.filter(id=>f.rooms.includes(id)).forEach(id=>{
+    const r=ROOMS[id]; if(x+r.w>COLS){x=0;y+=rh;rh=0;}
+    if(y+r.h>ROWS){ dropped++; return; }
+    state.placed.push({uid:state.uid++,id,x,y,w:r.w,h:r.h});
+    x+=r.w; rh=Math.max(rh,r.h);
+  });
+  if(dropped) console.warn('loadScaffold: วางห้องไม่ครบ '+dropped+' ห้อง (พื้นที่ไม่พอ)');
+  evaluate(); drawFlows();
+}
+
+/* ---------- export / import ---------- */
+function exportJSON(){
+  const data={form:state.form, placed:state.placed,
+    result:{ score:+$('#gscore').textContent, pass:+$('#passn').textContent, fail:+$('#failn').textContent, warn:+$('#warnn').textContent,
+      rules:lastResults.map(r=>({th:r.th,cl:r.cl,s:r.s})) }};
+  const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=el('a'); a.href=URL.createObjectURL(b); a.download='plant-layout-'+state.form+'.json'; a.click();
+}
+$('#import').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file)return; const fr=new FileReader();
+  fr.onload=()=>{ try{ const d=JSON.parse(fr.result);
+    pushHistory();
+    if(FORMS[d.form]){ state.form=d.form; $('#form').value=d.form; }
+    state.placed=(Array.isArray(d.placed)?d.placed:[])
+      .filter(p=>p&&ROOMS[p.id]&&[p.x,p.y,p.w,p.h].every(n=>Number.isFinite(n)))
+      .map(p=>({id:p.id,x:p.x,y:p.y,w:p.w,h:p.h,uid:state.uid++}));
+    state.sel=null;
+    renderSteps();renderPalette();evaluate();drawFlows();
+  }catch(err){alert('ไฟล์ไม่ถูกต้อง');} };
+  fr.readAsText(file);
+  e.target.value='';
+});
+
+/* ---------- wire up ---------- */
+$('#form').addEventListener('change',e=>{ state.form=e.target.value; state.placed=[]; state.sel=null; state.step=0; state.history=[]; renderSteps();renderPalette();evaluate();drawFlows(); });
+$('#reset').onclick=()=>{ pushHistory(); state.placed=[];state.sel=null; evaluate();drawFlows(); };
+$('#scaffold').onclick=loadScaffold;
+$('#export').onclick=exportJSON;
+$('#print').onclick=()=>window.print();
+$('#check').onclick=()=>{ evaluate(); $('#rules').scrollIntoView({behavior:'smooth'}); };
+$('#del').onclick=delSel; $('#rotate').onclick=rotateSel; $('#undo').onclick=undo;
+$('#zoomin').onclick=()=>{ zoom+=.1; applyZoom(); };
+$('#zoomout').onclick=()=>{ zoom-=.1; applyZoom(); };
+$('#zoomreset').onclick=()=>{ zoom=1; applyZoom(); };
+$('#zoomfit').onclick=fitZoom;
+$('.center').addEventListener('wheel',e=>{ if(!e.ctrlKey)return; e.preventDefault(); zoom+=(e.deltaY<0?.1:-.1); applyZoom(); },{passive:false});
+$('#sm_close').onclick=closeStepModal; $('#sm_ok').onclick=closeStepModal;
+$('#stepmodal').addEventListener('click',e=>{ if(e.target===$('#stepmodal')) closeStepModal(); });
+['personnel','material','product','waste'].forEach(k=>{
+  $('#f_'+k).addEventListener('change',e=>{ state.flows[k]=e.target.checked; drawFlows(); renderRules(); });
+});
+
+/* ---------- boot ---------- */
+initFloor(); renderForm(); renderSteps(); renderPalette(); evaluate(); drawFlows();
+zoom=0.8; applyZoom();   // เริ่มที่ระดับอ่านง่าย (กด ⤢ เพื่อดูทั้งผัง)
+</script>
+</body>
+</html>

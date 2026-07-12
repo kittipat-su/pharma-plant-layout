@@ -81,6 +81,13 @@
   #zoomlvl{font-variant-numeric:tabular-nums;font-size:12px;min-width:40px;display:inline-block;text-align:center}
   .layouttype{font-size:11.5px;color:var(--muted);padding:8px 12px;background:#eaf1fb;border-bottom:1px solid var(--line);line-height:1.5}
   .layouttype b{color:#2b5db8;font-weight:600}
+  .flowbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:#fff7ec;border-bottom:1px solid #f0d9b3}
+  .fb-label{font-size:11.5px;color:#8a5a12;font-weight:700}
+  .fb-pick{display:flex;gap:4px}
+  .fbpill{font-size:11.5px;padding:5px 11px;border-radius:20px;border:1.5px solid var(--fc);background:var(--panel);color:var(--fc);cursor:pointer;font-weight:700}
+  .fbpill.active{background:var(--fc);color:#fff}
+  .fb-count{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:600}
+  .floor.flowmode{cursor:crosshair}
   .floorwrap{padding:28px;min-width:max-content}
   .floor{position:relative;background:
       linear-gradient(#e6ecf5 1px,transparent 1px),
@@ -241,6 +248,7 @@
         <label class="toggle"><input type="checkbox" id="f_product"><span style="color:#cf7d0a">● ผลิตภัณฑ์</span></label>
         <label class="toggle"><input type="checkbox" id="f_waste"><span style="color:#d6453f">● ของเสีย</span></label>
         <label class="toggle"><input type="checkbox" id="f_pressure"><span style="color:#4a7a7a">◐ ความดัน</span></label>
+        <button class="btn" id="flowdraw" title="วาดเส้นทางการไหลเอง — คลิกห้องเรียงลำดับ">✏️ วาด</button>
       </div>
       <span class="divider"></span>
       <div class="seg" role="group" aria-label="เครื่องมือแก้ไข">
@@ -263,6 +271,21 @@
       </div>
       <span class="grow"></span>
       <button class="btn primary" id="check">ตรวจ GMP ✓</button>
+    </div>
+    <div class="flowbar" id="flowbar" hidden>
+      <span class="fb-label">วาดเส้นทาง — คลิกห้องเรียงลำดับ:</span>
+      <div class="fb-pick">
+        <button class="fbpill" data-flow="personnel" style="--fc:#2f6fe0">● คน</button>
+        <button class="fbpill" data-flow="material" style="--fc:#159a63">● วัตถุดิบ</button>
+        <button class="fbpill" data-flow="product" style="--fc:#cf7d0a">● ผลิตภัณฑ์</button>
+        <button class="fbpill" data-flow="waste" style="--fc:#d6453f">● ของเสีย</button>
+      </div>
+      <span class="fb-count" id="fb_count"></span>
+      <span class="grow"></span>
+      <button class="btn" id="fb_undo" title="ถอยห้องล่าสุด">↩ ถอย</button>
+      <button class="btn" id="fb_clear" title="ล้างเส้นทางนี้">ล้างเส้นนี้</button>
+      <button class="btn" id="fb_auto" title="เติมเส้นทางแนะนำอัตโนมัติ">เติมอัตโนมัติ</button>
+      <button class="btn primary" id="fb_done">เสร็จ</button>
     </div>
     <div class="layouttype">โครงสร้างผัง: สายการผลิตเรียงต่อเนื่อง = <b>Product layout</b> · กลุ่ม QC/สนับสนุน = <b>Process layout</b> · รวมทั้งผัง = <b>Combination layout</b></div>
     <div class="floorwrap">
@@ -467,8 +490,9 @@ const WELFARE_KEEPAWAY = ['toilet','canteen'];
    STATE
    ============================================================ */
 let state = { form:'osd', placed:[], doors:[], sel:null, step:0, uid:1, history:[],
-  showPressure:false, doorMode:false,
-  flows:{personnel:false,material:false,product:false,waste:false} };
+  showPressure:false, doorMode:false, flowEdit:null,
+  flows:{personnel:false,material:false,product:false,waste:false},
+  flowSeq:{personnel:[],material:[],product:[],waste:[]} };   // ลำดับ uid ของห้องที่นิสิตวาดเอง
 
 /* ============================================================
    GEOMETRY / ENGINE
@@ -585,9 +609,11 @@ function buildRules(){
     run:()=> !has('dispensing')?{s:'na'}:
        (adjAny('dispensing',AIRLOCKS)?{s:'pass'}:{s:'fail',d:'ต่อ MAL/ทางเดิน/ห้องเปลี่ยนชุดคั่น ไม่ให้เปิดตรงสู่ภายนอก',rooms:['dispensing']})});
 
-  R.push({cl:'ข้อ 60, 34 · บุคลากร', pr:'Smooth Flow', th:'บุคลากรเข้าสู่พื้นที่ผลิตผ่าน PAL / ห้องเปลี่ยนชุด',
-    run:()=> placedProd().length===0?{s:'na'}:
-       (prodAdjAny(GOWNINGS)?{s:'pass'}:{s:'fail',d:'ต้องมี Personnel Airlock/ห้องเปลี่ยนชุดติดกับสายการผลิต',rooms:placedProd()})});
+  R.push({cl:'ข้อ 60, 34 · บุคลากร', pr:'Smooth Flow', th:'บุคลากรเข้าสู่พื้นที่ผลิตผ่าน PAL / ห้องเปลี่ยนชุด (ตรง หรือผ่านทางเดิน)',
+    run:()=>{ if(placedProd().length===0) return {s:'na'};
+      const direct = prodAdjAny(GOWNINGS);                                   // ห้องผลิตติด PAL/gowning โดยตรง
+      const viaCorridor = has('corridor') && GOWNINGS.some(g=>adjIds('corridor',g)) && placedProd().some(pid=>adjIds(pid,'corridor')); // PAL–ทางเดิน–สายผลิต
+      return (direct||viaCorridor)?{s:'pass'}:{s:'fail',d:'ต้องมีทางเข้าบุคลากรสู่สายการผลิตผ่าน PAL/ห้องเปลี่ยนชุด (จะผ่านทางเดินที่เชื่อมกับ PAL ก็ได้)',rooms:placedProd()};}});
 
   R.push({cl:'ข้อ 41, 34 · "NO OUTSIDE IN"', pr:'Safety', th:'พื้นที่ผลิตไม่ติดพื้นที่ทั่วไป/ภายนอกโดยตรง (กันทั้งขาเข้า–ขาออก)',
     run:()=> placedProd().length===0?{s:'na'}:
@@ -716,18 +742,34 @@ function segInt(p1,p2,p3,p4){
   const d1=d(p3,p4,p1),d2=d(p3,p4,p2),d3=d(p1,p2,p3),d4=d(p1,p2,p4);
   return ((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0));
 }
+// เส้นทางที่นิสิตวาดเอง (ลำดับ uid) → จุดกึ่งกลางห้อง
 function flowPath(kind){
-  const f=FORMS[state.form];
-  let seq;
-  // วัตถุดิบจบที่ "ทางเข้าสายผลิต" (ห้องแรก) — การเดินต่อในสายเป็นหน้าที่ของ product flow
-  if(kind==='material') seq=['receiving','quarantine','sampling','released','mal','dispensing',f.prod[0]];
-  else if(kind==='product') seq=[...f.prod,'ipc','primary_pack','secondary_pack','fg_store'];
-  else if(kind==='personnel') seq=['change_room','pal','gowning', ...(f.sterile?['gowning_d','gowning_c','gowning_b']:[]), ...f.prod];
-  // ของเสีย = ทางออกสั้นจากปลายสายผลิต ไม่ย้อนทะลุสายสะอาด (NO INSIDE OUT)
-  else seq=[f.prod[f.prod.length-1],'waste'];
   const pts=[];
-  seq.filter(has).forEach(id=>{ const r=rectsOf(id)[0]; pts.push({x:(r.x+r.w/2)*CELL,y:(r.y+r.h/2)*CELL,id}); });
+  (state.flowSeq[kind]||[]).forEach(uid=>{ const r=state.placed.find(p=>p.uid===uid); if(r) pts.push({x:(r.x+r.w/2)*CELL,y:(r.y+r.h/2)*CELL,id:r.id,uid}); });
   return pts;
+}
+// ลำดับ "แนะนำ" สำหรับปุ่มเติมอัตโนมัติ (ตัวช่วยเริ่มต้น)
+function autoFlowIds(kind){
+  const f=FORMS[state.form];
+  if(kind==='material') return ['receiving','quarantine','sampling','released','mal','dispensing',f.prod[0]];
+  if(kind==='product')  return [...f.prod,'ipc','primary_pack','secondary_pack','fg_store'];
+  if(kind==='personnel')return ['change_room','pal','gowning', ...(f.sterile?['gowning_d','gowning_c','gowning_b']:[]), ...f.prod];
+  return [f.prod[f.prod.length-1],'waste'];
+}
+function autoFillFlow(kind){
+  const uids=[]; autoFlowIds(kind).forEach(id=>{ const r=state.placed.find(p=>p.id===id); if(r&&!uids.includes(r.uid)) uids.push(r.uid); });
+  state.flowSeq[kind]=uids; state.flows[kind]=true;
+}
+function syncFlowToggles(){ ['personnel','material','product','waste'].forEach(k=>{ const cb=document.getElementById('f_'+k); if(cb) cb.checked=!!state.flows[k]; }); }
+function renderFlowbar(){
+  const bar=document.getElementById('flowbar'); if(!bar) return;
+  const on=!!state.flowEdit; bar.hidden=!on;
+  const fd=document.getElementById('flowdraw'); if(fd) fd.classList.toggle('primary',on);
+  syncFlowToggles();
+  if(!on) return;
+  bar.querySelectorAll('.fbpill').forEach(b=>b.classList.toggle('active',b.dataset.flow===state.flowEdit));
+  const names={personnel:'คน',material:'วัตถุดิบ',product:'ผลิตภัณฑ์',waste:'ของเสีย'};
+  const cnt=document.getElementById('fb_count'); if(cnt) cnt.textContent=names[state.flowEdit]+': '+(state.flowSeq[state.flowEdit]||[]).length+' ห้อง';
 }
 function crossCount(a,b){
   let n=0;
@@ -803,8 +845,8 @@ function stepList(){
     desc:'แยกห้องปฏิบัติการ QC ออกจากพื้นที่ผลิต โดยเฉพาะห้องจุลชีววิทยา (Micro) ที่ห้ามติดพื้นที่ผลิตเพื่อกันการปนเปื้อนข้าม'});
   s.push({t:'สวัสดิการ + ระบบสนับสนุน (อย่าให้ชนพื้นที่ผลิต)', cl:'ข้อ 60 / PIC/S 3.30–3.31', rooms:['toilet','canteen','office','ahu','water_sys','workshop','waste'],
     desc:'วางสวัสดิการและระบบสนับสนุน โดยห้องน้ำ/โรงอาหารต้องไม่เปิดตรงสู่พื้นที่ผลิตหรือจัดเก็บ'});
-  s.push({t:'เปิด overlay การไหล → ตรวจ crossover → แก้จุด ❌', cl:'ตรวจสอบ', rooms:[],
-    desc:'เปิดชั้นการไหล (คน/วัตถุดิบ/ผลิตภัณฑ์/ของเสีย) เพื่อดูจุดที่เส้นทางตัดกัน แล้วปรับตำแหน่งห้องให้เส้นทางคนกับวัตถุดิบไม่ไขว้กัน'});
+  s.push({t:'วาดเส้นทางการไหลเอง (✏️ วาด) → ตรวจ crossover → แก้จุด ❌', cl:'ตรวจสอบ', rooms:[],
+    desc:'กด “✏️ วาด” แล้วเลือกชนิดการไหล (คน/วัตถุดิบ/ผลิตภัณฑ์/ของเสีย) คลิกห้องเรียงลำดับเพื่อกำหนดเส้นทางเอง (หรือกด “เติมอัตโนมัติ” เป็นตัวช่วย) แล้วดูจุดที่เส้นทางคนกับวัตถุดิบตัดกัน ปรับผังให้ไม่ไขว้'});
   return s;
 }
 
@@ -1031,6 +1073,14 @@ function drawFlows(){
     const pts=flowPath(k); if(pts.length<2) continue;
     for(let i=0;i<pts.length-1;i++) svg.appendChild(svgLine(pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y,colors[k],'2.5','ar_'+k,'.9'));
   }
+  // เลขลำดับของเส้นทางที่กำลังวาด
+  if(state.flowEdit){
+    const pts=flowPath(state.flowEdit), col=colors[state.flowEdit];
+    pts.forEach((pt,i)=>{
+      const c=document.createElementNS(SVGNS,'circle'); c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);c.setAttribute('r','9');c.setAttribute('fill','#ffffff');c.setAttribute('stroke',col);c.setAttribute('stroke-width','2'); svg.appendChild(c);
+      const t=document.createElementNS(SVGNS,'text'); t.setAttribute('x',pt.x);t.setAttribute('y',pt.y+3.6);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','10.5');t.setAttribute('font-weight','800');t.setAttribute('fill',col); t.textContent=(i+1); svg.appendChild(t);
+    });
+  }
 }
 
 let lastResults=[];
@@ -1073,8 +1123,8 @@ function renderRules(){
 /* ============================================================
    INTERACTION
    ============================================================ */
-function pushHistory(){ state.history.push(JSON.stringify({placed:state.placed,doors:state.doors})); if(state.history.length>50) state.history.shift(); }
-function undo(){ if(!state.history.length) return; const s=JSON.parse(state.history.pop()); state.placed=s.placed||[]; state.doors=s.doors||[]; state.sel=null; evaluate(); drawFlows(); }
+function pushHistory(){ state.history.push(JSON.stringify({placed:state.placed,doors:state.doors,flowSeq:state.flowSeq})); if(state.history.length>50) state.history.shift(); }
+function undo(){ if(!state.history.length) return; const s=JSON.parse(state.history.pop()); state.placed=s.placed||[]; state.doors=s.doors||[]; if(s.flowSeq) state.flowSeq=s.flowSeq; state.sel=null; evaluate(); drawFlows(); renderFlowbar(); }
 function refocus(uid){ const n=floor.querySelector('.room[data-uid="'+uid+'"]'); if(n) n.focus(); }
 function addDoorAt(p, lx, ly){
   const fx=Math.max(0,Math.min(1,lx/p.w)), fy=Math.max(0,Math.min(1,ly/p.h));
@@ -1104,7 +1154,7 @@ function addRoom(id){
   state.sel=state.placed[state.placed.length-1].uid;
   evaluate(); drawFlows();
 }
-function delSel(){ if(state.sel==null)return; pushHistory(); state.placed=state.placed.filter(p=>p.uid!==state.sel); state.doors=state.doors.filter(d=>d.room!==state.sel); state.sel=null; evaluate(); drawFlows(); }
+function delSel(){ if(state.sel==null)return; pushHistory(); state.placed=state.placed.filter(p=>p.uid!==state.sel); state.doors=state.doors.filter(d=>d.room!==state.sel); ['personnel','material','product','waste'].forEach(k=>state.flowSeq[k]=state.flowSeq[k].filter(u=>u!==state.sel)); state.sel=null; evaluate(); drawFlows(); }
 function rotateSel(){
   const p=state.placed.find(x=>x.uid===state.sel); if(!p)return;
   const nw=p.h, nh=p.w;
@@ -1128,6 +1178,16 @@ floor.addEventListener('pointerdown',e=>{
     const pp=state.placed.find(x=>x.uid===+rr.dataset.uid); if(!pp) return;
     const frr=floor.getBoundingClientRect();
     addDoorAt(pp, (e.clientX-frr.left)/(CELL*zoom)-pp.x, (e.clientY-frr.top)/(CELL*zoom)-pp.y);
+    return;
+  }
+  // โหมดวาดการไหล: คลิกห้องเรียงลำดับเข้าเส้นทาง (คลิกซ้ำห้องล่าสุด = ถอย)
+  if(state.flowEdit){
+    const rr=e.target.closest('.room'); if(!rr) return;
+    const uid=+rr.dataset.uid, seq=state.flowSeq[state.flowEdit];
+    pushHistory();
+    if(seq[seq.length-1]===uid) seq.pop(); else seq.push(uid);
+    state.flows[state.flowEdit]=true;
+    drawFlows(); renderRules(); renderFlowbar();
     return;
   }
   const rd=e.target.closest('.room'); if(!rd)return;
@@ -1166,7 +1226,7 @@ floor.addEventListener('pointerup',e=>{
 floor.addEventListener('dblclick',e=>{ const rd=e.target.closest('.room'); if(rd){state.sel=+rd.dataset.uid; delSel();} });
 document.addEventListener('keydown',e=>{
   const modalOpen = [...document.querySelectorAll('.modal-back')].some(m=>!m.hidden);
-  if(e.key==='Escape'){ if(modalOpen){ e.preventDefault(); closeAllModals(); } return; }
+  if(e.key==='Escape'){ if(modalOpen){ e.preventDefault(); closeAllModals(); } else if(state.flowEdit){ e.preventDefault(); state.flowEdit=null; floor.classList.remove('flowmode'); renderFlowbar(); } return; }
   if(modalOpen) return;   // ป๊อปอัปเปิดอยู่ — ไม่ย้าย/ลบห้องด้วยคีย์บอร์ด
   if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); undo(); return; }
   const tag=(e.target.tagName||'').toLowerCase();
@@ -1194,7 +1254,7 @@ document.addEventListener('keydown',e=>{
 /* ---------- scaffold (ผังเริ่มต้นแบบยังไม่ผ่าน — ให้ไปแก้) ---------- */
 function loadScaffold(){
   pushHistory();
-  state.placed=[]; state.doors=[]; state.sel=null;
+  state.placed=[]; state.doors=[]; clearFlowSeq(); state.sel=null;
   const f=FORMS[state.form]; let x=0,y=0,rh=0, dropped=0;
   const order=[...CORE_STORE, ...f.prod, 'ipc','primary_pack','secondary_pack',
     'corridor','pal','mal','gowning',...(f.sterile?['gowning_d','gowning_c','gowning_b']:[]),
@@ -1212,7 +1272,7 @@ function loadScaffold(){
 
 /* ---------- export / import ---------- */
 function exportJSON(){
-  const data={form:state.form, placed:state.placed, doors:state.doors, schedule:scheduleRows(),
+  const data={form:state.form, placed:state.placed, doors:state.doors, flowSeq:state.flowSeq, schedule:scheduleRows(),
     result:{ score:+$('#gscore').textContent, pass:+$('#passn').textContent, fail:+$('#failn').textContent, warn:+$('#warnn').textContent,
       rules:lastResults.map(r=>({th:r.th,cl:r.cl,s:r.s})) }};
   const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -1230,6 +1290,9 @@ $('#import').addEventListener('change',e=>{
     state.doors=(Array.isArray(d.doors)?d.doors:[])
       .filter(dr=>dr&&idmap[dr.room]!=null&&['top','bottom','left','right'].includes(dr.side))
       .map(dr=>({uid:state.uid++,room:idmap[dr.room],side:dr.side,frac:Number.isFinite(dr.frac)?dr.frac:.5,swing:[0,1,2,3].includes(dr.swing)?dr.swing:0,interlock:!!dr.interlock}));
+    const fs={personnel:[],material:[],product:[],waste:[]};
+    if(d.flowSeq) ['personnel','material','product','waste'].forEach(k=>{ (Array.isArray(d.flowSeq[k])?d.flowSeq[k]:[]).forEach(old=>{ if(idmap[old]!=null) fs[k].push(idmap[old]); }); });
+    state.flowSeq=fs;
     state.sel=null;
     renderSteps();renderPalette();evaluate();drawFlows();
   }catch(err){alert('ไฟล์ไม่ถูกต้อง');} };
@@ -1238,8 +1301,9 @@ $('#import').addEventListener('change',e=>{
 });
 
 /* ---------- wire up ---------- */
-$('#form').addEventListener('change',e=>{ state.form=e.target.value; state.placed=[]; state.doors=[]; state.sel=null; state.step=0; state.history=[]; renderSteps();renderPalette();evaluate();drawFlows(); });
-$('#reset').onclick=()=>{ pushHistory(); state.placed=[]; state.doors=[]; state.sel=null; evaluate();drawFlows(); };
+function clearFlowSeq(){ state.flowSeq={personnel:[],material:[],product:[],waste:[]}; }
+$('#form').addEventListener('change',e=>{ state.form=e.target.value; state.placed=[]; state.doors=[]; clearFlowSeq(); state.sel=null; state.step=0; state.history=[]; renderSteps();renderPalette();evaluate();drawFlows(); });
+$('#reset').onclick=()=>{ pushHistory(); state.placed=[]; state.doors=[]; clearFlowSeq(); state.sel=null; evaluate();drawFlows(); };
 $('#scaffold').onclick=loadScaffold;
 $('#export').onclick=exportJSON;
 $('#print').onclick=()=>window.print();
@@ -1263,10 +1327,16 @@ $('#fd81modal').addEventListener('click',e=>{ if(e.target===$('#fd81modal')) clo
   $('#f_'+k).addEventListener('change',e=>{ state.flows[k]=e.target.checked; drawFlows(); renderRules(); });
 });
 $('#f_pressure').addEventListener('change',e=>{ state.showPressure=e.target.checked; renderRooms(); drawFlows(); });
-$('#doormode').onclick=()=>{ state.doorMode=!state.doorMode; $('#doormode').classList.toggle('primary',state.doorMode); floor.classList.toggle('doormode',state.doorMode); floor.style.cursor=state.doorMode?'copy':''; renderDoors(); };
+$('#doormode').onclick=()=>{ state.doorMode=!state.doorMode; if(state.doorMode){ state.flowEdit=null; floor.classList.remove('flowmode'); renderFlowbar(); } $('#doormode').classList.toggle('primary',state.doorMode); floor.classList.toggle('doormode',state.doorMode); floor.style.cursor=state.doorMode?'copy':''; renderDoors(); };
+$('#flowdraw').onclick=()=>{ state.flowEdit = state.flowEdit? null : 'personnel'; if(state.flowEdit){ state.flows.personnel=true; state.doorMode=false; $('#doormode').classList.remove('primary'); floor.classList.remove('doormode'); floor.classList.add('flowmode'); } else floor.classList.remove('flowmode'); renderFlowbar(); drawFlows(); renderRules(); };
+$('#fb_done').onclick=()=>{ state.flowEdit=null; floor.classList.remove('flowmode'); renderFlowbar(); };
+document.querySelectorAll('.fbpill').forEach(b=>b.onclick=()=>{ state.flowEdit=b.dataset.flow; state.flows[state.flowEdit]=true; renderFlowbar(); drawFlows(); renderRules(); });
+$('#fb_undo').onclick=()=>{ if(!state.flowEdit)return; const s=state.flowSeq[state.flowEdit]; if(s.length){ pushHistory(); s.pop(); drawFlows(); renderRules(); renderFlowbar(); } };
+$('#fb_clear').onclick=()=>{ if(!state.flowEdit)return; pushHistory(); state.flowSeq[state.flowEdit]=[]; drawFlows(); renderRules(); renderFlowbar(); };
+$('#fb_auto').onclick=()=>{ if(!state.flowEdit)return; pushHistory(); autoFillFlow(state.flowEdit); drawFlows(); renderRules(); renderFlowbar(); };
 
 /* ---------- boot ---------- */
-initFloor(); renderForm(); renderSteps(); renderPalette(); evaluate(); drawFlows();
+initFloor(); renderForm(); renderSteps(); renderPalette(); evaluate(); drawFlows(); renderFlowbar();
 zoom=0.8; applyZoom();   // เริ่มที่ระดับอ่านง่าย (กด ⤢ เพื่อดูทั้งผัง)
 </script>
 </body>

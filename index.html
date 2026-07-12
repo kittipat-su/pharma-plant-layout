@@ -75,6 +75,7 @@
   .toggle{display:flex;align-items:center;gap:5px;font-size:11.5px;padding:5px 8px;border-radius:7px;background:var(--panel);border:1px solid var(--line);cursor:pointer}
   .toggle input{accent-color:var(--accent)}
   .toggle:has(input:checked){background:#eaf1fc;box-shadow:inset 0 0 0 1px var(--accent)}
+  .toggle:has(input:disabled){opacity:.4;cursor:not-allowed}   /* ปิดใช้ overlay ตอนกำลังวาด (คุมด้วยแถบวาดแทน) */
   .zoomctl{display:flex;gap:2px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px;box-shadow:var(--shadow)}
   .zbtn{padding:4px 8px;min-width:30px;box-shadow:none;border:1px solid transparent;background:transparent;font-size:14px;line-height:1}
   .zbtn:hover{background:#e9f0fa;border-color:transparent}
@@ -776,7 +777,16 @@ function autoFillFlow(kind){
   const uids=[]; autoFlowIds(kind).forEach(id=>{ const r=state.placed.find(p=>p.id===id); if(r&&!uids.includes(r.uid)) uids.push(r.uid); });
   state.flowSeq[kind]=uids; state.flows[kind]=true;
 }
-function syncFlowToggles(){ ['personnel','material','product','waste'].forEach(k=>{ const cb=document.getElementById('f_'+k); if(cb) cb.checked=!!state.flows[k]; }); }
+// ตอนวาด (flowEdit) แถบ overlay ด้านบนสะท้อน "โหมดแยก": ติ๊กเฉพาะชนิดที่กำลังวาด + ปิดใช้ (คุมด้วยแถบวาด)
+function syncFlowToggles(){
+  const drawing=!!state.flowEdit;
+  ['personnel','material','product','waste'].forEach(k=>{ const cb=document.getElementById('f_'+k);
+    if(cb){ cb.checked = drawing ? (k===state.flowEdit) : !!state.flows[k]; cb.disabled = drawing; } });
+  const pc=document.getElementById('f_pressure'); if(pc){ pc.checked = drawing ? false : state.showPressure; pc.disabled = drawing; }
+}
+// ออกจากโหมดวาด → เปิด overlay ให้ทุกเส้นที่วาดไว้ (มี ≥2 ห้อง) เพื่อกลับมาเทียบจุดตัดคน↔วัตถุดิบได้
+function enableDrawnFlows(){ ['personnel','material','product','waste'].forEach(k=>{ if((state.flowSeq[k]||[]).length>=2) state.flows[k]=true; }); }
+function exitFlowEdit(){ state.flowEdit=null; floor.classList.remove('flowmode'); enableDrawnFlows(); renderFlowbar(); drawFlows(); renderRules(); }
 function renderFlowbar(){
   const bar=document.getElementById('flowbar'); if(!bar) return;
   const on=!!state.flowEdit; bar.hidden=!on;
@@ -1073,8 +1083,8 @@ function drawFlows(){
     const pth=document.createElementNS(SVGNS,'path'); pth.setAttribute('d','M0,0 L7,3 L0,6 Z'); pth.setAttribute('fill',colors[k]); m.appendChild(pth); defs.appendChild(m);
   }
   svg.appendChild(defs);
-  // pressure cascade arrows: ทิศอากาศไหลจากห้องความดันสูง → ต่ำ ที่ขอบซึ่งติดกัน
-  if(state.showPressure){
+  // pressure cascade arrows: ทิศอากาศไหลจากห้องความดันสูง → ต่ำ ที่ขอบซึ่งติดกัน (ซ่อนตอนกำลังวาด)
+  if(state.showPressure && !state.flowEdit){
     const a=state.placed;
     for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++){
       if(!touching(a[i],a[j])) continue;
@@ -1085,7 +1095,8 @@ function drawFlows(){
       svg.appendChild(svgLine(e.mx-dir[0]*L, e.my-dir[1]*L, e.mx+dir[0]*L, e.my+dir[1]*L, colors.pressure, '3', 'ar_pressure', '.95'));
     }
   }
-  for(const k in state.flows){ if(!state.flows[k]) continue;
+  // ตอนวาด (flowEdit) โชว์เฉพาะเส้นที่กำลังวาด · ตอนไม่วาด โชว์ตาม overlay ที่เปิดไว้
+  for(const k in state.flows){ const show = state.flowEdit ? (k===state.flowEdit) : state.flows[k]; if(!show) continue;
     const pts=flowPath(k); if(pts.length<2) continue;
     for(let i=0;i<pts.length-1;i++) svg.appendChild(svgLine(pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y,colors[k],'2.5','ar_'+k,'.9'));
   }
@@ -1202,8 +1213,7 @@ floor.addEventListener('pointerdown',e=>{
     const uid=+rr.dataset.uid, seq=state.flowSeq[state.flowEdit];
     pushHistory();
     if(seq[seq.length-1]===uid) seq.pop(); else seq.push(uid);
-    state.flows[state.flowEdit]=true;
-    drawFlows(); renderRules(); renderFlowbar();
+    drawFlows(); renderRules(); renderFlowbar();   // การมองเห็นคุมด้วย flowEdit (โหมดแยก) — ไม่ต้องตั้ง state.flows
     return;
   }
   const rd=e.target.closest('.room'); if(!rd)return;
@@ -1243,7 +1253,7 @@ floor.addEventListener('dblclick',e=>{ if(state.flowEdit||state.doorMode) return
   const rd=e.target.closest('.room'); if(rd){state.sel=+rd.dataset.uid; delSel();} });
 document.addEventListener('keydown',e=>{
   const modalOpen = [...document.querySelectorAll('.modal-back')].some(m=>!m.hidden);
-  if(e.key==='Escape'){ if(modalOpen){ e.preventDefault(); closeAllModals(); } else if(state.flowEdit){ e.preventDefault(); state.flowEdit=null; floor.classList.remove('flowmode'); renderFlowbar(); } return; }
+  if(e.key==='Escape'){ if(modalOpen){ e.preventDefault(); closeAllModals(); } else if(state.flowEdit){ e.preventDefault(); exitFlowEdit(); } return; }
   if(modalOpen) return;   // ป๊อปอัปเปิดอยู่ — ไม่ย้าย/ลบห้องด้วยคีย์บอร์ด
   if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); undo(); return; }
   const tag=(e.target.tagName||'').toLowerCase();
@@ -1345,10 +1355,12 @@ $('#fd81modal').addEventListener('click',e=>{ if(e.target===$('#fd81modal')) clo
   $('#f_'+k).addEventListener('change',e=>{ state.flows[k]=e.target.checked; drawFlows(); renderRules(); });
 });
 $('#f_pressure').addEventListener('change',e=>{ state.showPressure=e.target.checked; renderRooms(); drawFlows(); });
-$('#doormode').onclick=()=>{ state.doorMode=!state.doorMode; if(state.doorMode){ state.flowEdit=null; floor.classList.remove('flowmode'); renderFlowbar(); } $('#doormode').classList.toggle('primary',state.doorMode); floor.classList.toggle('doormode',state.doorMode); floor.style.cursor=state.doorMode?'copy':''; renderDoors(); };
-$('#flowdraw').onclick=()=>{ state.flowEdit = state.flowEdit? null : 'personnel'; if(state.flowEdit){ state.flows.personnel=true; state.doorMode=false; $('#doormode').classList.remove('primary'); floor.classList.remove('doormode'); floor.classList.add('flowmode'); } else floor.classList.remove('flowmode'); renderFlowbar(); drawFlows(); renderRules(); };
-$('#fb_done').onclick=()=>{ state.flowEdit=null; floor.classList.remove('flowmode'); renderFlowbar(); };
-document.querySelectorAll('.fbpill').forEach(b=>b.onclick=()=>{ state.flowEdit=b.dataset.flow; state.flows[state.flowEdit]=true; renderFlowbar(); drawFlows(); renderRules(); });
+$('#doormode').onclick=()=>{ state.doorMode=!state.doorMode; if(state.doorMode && state.flowEdit){ exitFlowEdit(); } $('#doormode').classList.toggle('primary',state.doorMode); floor.classList.toggle('doormode',state.doorMode); floor.style.cursor=state.doorMode?'copy':''; renderDoors(); };
+$('#flowdraw').onclick=()=>{ if(state.flowEdit){ exitFlowEdit(); return; }        // toggle: กำลังวาดอยู่ → ออก
+  state.flowEdit='personnel'; state.doorMode=false; $('#doormode').classList.remove('primary'); floor.classList.remove('doormode'); floor.classList.add('flowmode');
+  renderFlowbar(); drawFlows(); renderRules(); };
+$('#fb_done').onclick=()=>{ exitFlowEdit(); };
+document.querySelectorAll('.fbpill').forEach(b=>b.onclick=()=>{ state.flowEdit=b.dataset.flow; renderFlowbar(); drawFlows(); renderRules(); });   // สลับชนิด → โชว์เฉพาะชนิดนั้น (โหมดแยก)
 $('#fb_undo').onclick=()=>{ if(!state.flowEdit)return; const s=state.flowSeq[state.flowEdit]; if(s.length){ pushHistory(); s.pop(); drawFlows(); renderRules(); renderFlowbar(); } };
 $('#fb_clear').onclick=()=>{ if(!state.flowEdit)return; pushHistory(); state.flowSeq[state.flowEdit]=[]; drawFlows(); renderRules(); renderFlowbar(); };
 $('#fb_auto').onclick=()=>{ if(!state.flowEdit)return; pushHistory(); autoFillFlow(state.flowEdit); drawFlows(); renderRules(); renderFlowbar(); };

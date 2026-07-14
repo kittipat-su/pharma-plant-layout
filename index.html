@@ -1136,7 +1136,7 @@ function buildRules(){
   }
 
   // แยกแอร์ล็อกคน–วัตถุดิบ (คนผ่าน PAL/ห้องเปลี่ยนชุด · ของผ่าน MAL/พาสบ็อกซ์ — ไม่ใช้ทางเดียวกัน)
-  R.push({cl:'ข้อ 42, 41 / PIC/S 3.16 · แยกแอร์ล็อกคน–วัตถุดิบ', pr:'Smooth Flow', th:'แยกแอร์ล็อกทางเข้าคน (PAL/ห้องเปลี่ยนชุด) ออกจากทางเข้าวัตถุดิบ (MAL/พาสบ็อกซ์) ไม่ให้คนกับของเข้าทางเดียวกัน',
+  R.push({cl:'PIC/S 3.16 · แยกแอร์ล็อกคน–วัตถุดิบ', pr:'Smooth Flow', th:'แยกแอร์ล็อกทางเข้าคน (PAL/ห้องเปลี่ยนชุด) ออกจากทางเข้าวัตถุดิบ (MAL/พาสบ็อกซ์) ไม่ให้คนกับของเข้าทางเดียวกัน',
     run:()=>{ if(placedProd().length===0) return {s:'na'};
       const hasPAL=GOWNINGS.some(has), hasMAL=hasMaterialAirlock();
       if(hasPAL&&hasMAL) return {s:'pass'};
@@ -1200,7 +1200,7 @@ function buildRules(){
           :{s:'fail',d:'Grade A ต้องอยู่ใน background B และเข้าถึงผ่าน gowning B โดยตรง',rooms:['fill_asept']})});
 
     // แยกก่อน–หลังฆ่าเชื้อขั้นสุดท้าย: ผลิตภัณฑ์ต้องผ่านเครื่องฆ่าเชื้อ (double-door) ไม่ลัดข้ามไปคลังยาสำเร็จ
-    R.push({cl:'ข้อ 308 / Annex 1 · ก่อน–หลังฆ่าเชื้อ', pr:'Safety', th:'แยกพื้นที่ก่อน/หลังการฆ่าเชื้อขั้นสุดท้าย — ผลิตภัณฑ์ผ่านเครื่องฆ่าเชื้อ (2 ประตู) กันของที่ผ่าน↔ยังไม่ผ่านปะปนกัน',
+    R.push({cl:'Annex 1 · ก่อน–หลังฆ่าเชื้อ', pr:'Safety', th:'แยกพื้นที่ก่อน/หลังการฆ่าเชื้อขั้นสุดท้าย — ผลิตภัณฑ์ผ่านเครื่องฆ่าเชื้อ (2 ประตู) กันของที่ผ่าน↔ยังไม่ผ่านปะปนกัน',
       run:()=>{ if(!has('autoclave')) return {s:'na'};
         const pre=['fill_term','comp_ster','filtration'].filter(has); if(!pre.length) return {s:'na'};
         const bad=[]; pre.forEach(a=>{ if(adjIds(a,'fg_store')) bad.push(a,'fg_store'); });   // บรรจุก่อนฆ่าเชื้อติดคลังยาสำเร็จตรง = ลัดข้ามเครื่องฆ่าเชื้อ

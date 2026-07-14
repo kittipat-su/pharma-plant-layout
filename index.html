@@ -861,6 +861,7 @@ const ROOMS = {
   gowning_d:   {th:'เปลี่ยนชุดเข้า D', en:'Gowning →D', z:'air', w:2,h:1, grade:'D'},
   gowning_c:   {th:'เปลี่ยนชุดเข้า C', en:'Gowning →C', z:'air', w:2,h:1, grade:'C'},
   gowning_b:   {th:'เปลี่ยนชุดเข้า B', en:'Gowning →B', z:'air', w:2,h:1, grade:'B'},
+  degowning:   {th:'ถอดชุด/ทางออก (De-gowning)', en:'De-gowning exit', z:'air', w:2,h:1, grade:'C'},
   // beta-lactam (สายเฉพาะ + containment)
   bl_granul:   {th:'แกรนูล β-lactam', en:'β-lactam granulation', z:'grey', w:3,h:2, bl:true, ded:'bl', containment:true},
   bl_compress: {th:'ตอกเม็ด β-lactam', en:'β-lactam compression', z:'grey', w:3,h:2, bl:true, ded:'bl', containment:true},
@@ -908,7 +909,7 @@ const RICON = {
   granulation:'r-granule', drying:'r-dry', blending:'r-mix', compression:'r-press', coating:'r-coat',
   sol_prep:'r-mix', fill_liquid:'r-bottle', mix_semi:'r-mix', fill_tube:'r-tube',
   comp_ster:'r-mix', filtration:'r-filter', fill_asept:'r-vial', fill_term:'r-vial', autoclave:'r-steriliser', lyo:'r-freeze', capping:'r-cap',
-  gowning_d:'r-gown', gowning_c:'r-gown', gowning_b:'r-gown',
+  gowning_d:'r-gown', gowning_c:'r-gown', gowning_b:'r-gown', degowning:'r-gown',
   bl_granul:'r-granule', bl_compress:'r-press', bl_pack:'r-pack', bl_airlock:'r-airlock',
   hm_granul:'r-granule', hm_compress:'r-press', hm_pack:'r-pack', hm_airlock:'r-airlock',
   cy_prep:'r-mix', cy_fill:'r-vial', cy_pack:'r-pack', cy_airlock:'r-airlock',
@@ -936,10 +937,10 @@ const FORMS = {
     rooms:[...CORE_STORE,'mix_semi','fill_tube',...CORE_SUP]},
   sterile_term: {name:'ยาปราศจากเชื้อ — ฆ่าเชื้อขั้นสุดท้าย', sterile:true,
     prod:['comp_ster','fill_term','autoclave','capping'],
-    rooms:[...CORE_STORE,'comp_ster','fill_term','autoclave','capping','gowning_d','gowning_c',...CORE_SUP]},
+    rooms:[...CORE_STORE,'comp_ster','fill_term','autoclave','capping','gowning_d','gowning_c','degowning',...CORE_SUP]},
   sterile_asept: {name:'ยาปราศจากเชื้อ — กระบวนการปลอดเชื้อ (Aseptic)', sterile:true, aseptic:true,
     prod:['comp_ster','filtration','fill_asept','lyo','capping'],
-    rooms:[...CORE_STORE,'comp_ster','filtration','fill_asept','lyo','capping','gowning_d','gowning_c','gowning_b',...CORE_SUP]},
+    rooms:[...CORE_STORE,'comp_ster','filtration','fill_asept','lyo','capping','gowning_d','gowning_c','gowning_b','degowning',...CORE_SUP]},
   betalactam: {name:'β-lactam เฉพาะสาย (Dedicated)', sterile:false, dedicated:true, dedGroup:'bl',
     prod:['bl_granul','bl_compress','bl_pack'],
     rooms:[...CORE_STORE,'bl_granul','bl_compress','bl_pack','bl_airlock',...CORE_SUP]},
@@ -952,7 +953,7 @@ const FORMS = {
 };
 
 /* ---------- กลุ่มอ้างอิงสำหรับกฎ ---------- */
-const AIRLOCKS = ['pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','corridor','bl_airlock','hm_airlock','cy_airlock'];
+const AIRLOCKS = ['pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','degowning','corridor','bl_airlock','hm_airlock','cy_airlock'];
 const GOWNINGS = ['pal','gowning','gowning_d','gowning_c','gowning_b'];
 const BLACK = ['receiving','secondary_pack','change_room','toilet','canteen','office','workshop','waste'];
 const WELFARE_KEEPAWAY = ['toilet','canteen'];
@@ -1132,6 +1133,14 @@ function buildRules(){
          (hasMaterialAirlock()?{s:'pass'}:{s:'warn',d:'ควรมี MAL/พาสบ็อกซ์ ส่งวัตถุดิบเข้าโดยไม่ปนทางคน'})});
   }
 
+  // แยกแอร์ล็อกคน–วัตถุดิบ (คนผ่าน PAL/ห้องเปลี่ยนชุด · ของผ่าน MAL/พาสบ็อกซ์ — ไม่ใช้ทางเดียวกัน)
+  R.push({cl:'ข้อ 42, 41 / PIC/S 3.16 · แยกแอร์ล็อกคน–วัตถุดิบ', pr:'Smooth Flow', th:'แยกแอร์ล็อกทางเข้าคน (PAL/ห้องเปลี่ยนชุด) ออกจากทางเข้าวัตถุดิบ (MAL/พาสบ็อกซ์) ไม่ให้คนกับของเข้าทางเดียวกัน',
+    run:()=>{ if(placedProd().length===0) return {s:'na'};
+      const hasPAL=GOWNINGS.some(has), hasMAL=hasMaterialAirlock();
+      if(hasPAL&&hasMAL) return {s:'pass'};
+      if(!hasPAL&&!hasMAL) return {s:'na'};   // ไม่มีแอร์ล็อกเลย — กฎบุคลากร/วัตถุดิบจับแล้ว
+      return {s:'warn',d:hasPAL?'มีแต่ทางเข้าคน — ควรเพิ่ม MAL/พาสบ็อกซ์ ให้วัตถุดิบเข้าแยกจากคน':'มีแต่ทางเข้าวัตถุดิบ — ควรเพิ่ม PAL/ห้องเปลี่ยนชุด ให้คนเข้าแยกจากของ'};}});
+
   R.push({cl:'GMP ของเสีย', pr:'Safety', th:'มีเส้นทางของเสียแยก ไม่ตัดผ่านพื้นที่สะอาด',
     run:()=> !has('waste')?{s:'na'}:
        (placedProd().some(pid=>adjIds('waste',pid))?{s:'warn',d:'พื้นที่ของเสียไม่ควรติดห้องผลิตโดยตรง',rooms:['waste']}:{s:'pass'})});
@@ -1163,6 +1172,19 @@ function buildRules(){
       run:()=> !has('fill_asept')?{s:'na'}:
         (adjAny('fill_asept',['gowning_b'])?{s:'pass'}
           :{s:'fail',d:'Grade A ต้องอยู่ใน background B และเข้าถึงผ่าน gowning B โดยตรง',rooms:['fill_asept']})});
+
+    // แยกก่อน–หลังฆ่าเชื้อขั้นสุดท้าย: ผลิตภัณฑ์ต้องผ่านเครื่องฆ่าเชื้อ (double-door) ไม่ลัดข้ามไปคลังยาสำเร็จ
+    R.push({cl:'ข้อ 308 / Annex 1 · ก่อน–หลังฆ่าเชื้อ', pr:'Safety', th:'แยกพื้นที่ก่อน/หลังการฆ่าเชื้อขั้นสุดท้าย — ผลิตภัณฑ์ผ่านเครื่องฆ่าเชื้อ (2 ประตู) กันของที่ผ่าน↔ยังไม่ผ่านปะปนกัน',
+      run:()=>{ if(!has('autoclave')) return {s:'na'};
+        const pre=['fill_term','comp_ster','filtration'].filter(has); if(!pre.length) return {s:'na'};
+        const bad=[]; pre.forEach(a=>{ if(adjIds(a,'fg_store')) bad.push(a,'fg_store'); });   // บรรจุก่อนฆ่าเชื้อติดคลังยาสำเร็จตรง = ลัดข้ามเครื่องฆ่าเชื้อ
+        if(bad.length) return {s:'fail',d:'พื้นที่บรรจุก่อนฆ่าเชื้อติดคลังยาสำเร็จ (หลังฆ่าเชื้อ) โดยตรง — ผลิตภัณฑ์ต้องผ่านเครื่องฆ่าเชื้อก่อน กันของที่ยังไม่ผ่านปนของที่ผ่านแล้ว',rooms:[...new Set(bad)]};
+        return pre.some(a=>adjIds(a,'autoclave'))?{s:'pass'}:{s:'warn',d:'ควรวางเครื่องฆ่าเชื้อขั้นสุดท้ายคั่นระหว่างพื้นที่บรรจุกับพื้นที่/คลังหลังฆ่าเชื้อ (แนวคิด double-door)'};}});
+
+    // ทางออก/ถอดชุด (de-gowning) แยกจากทางเข้า — กันเส้นทางเข้า-ออกพื้นที่สะอาดสวนกัน
+    R.push({cl:'ข้อ 358 / Annex 1 · ทางออก/ถอดชุด', pr:'Smooth Flow', th:'มีทางออก/ถอดชุด (de-gowning) แยกจากทางเข้า ไม่ให้เส้นทางเข้า-ออกพื้นที่สะอาดสวนกัน',
+      run:()=>{ const clean=[f.aseptic?'fill_asept':'fill_term','comp_ster','filtration'].filter(has); if(!clean.length) return {s:'na'};
+        return has('degowning')?{s:'pass'}:{s:'warn',d:'เพิ่มห้องถอดชุด/ทางออก (De-gowning) แยกจาก gowning ขาเข้า เพื่อกันคนเข้า-ออกสวนทางกันในพื้นที่สะอาด'};}});
   }
   // ---- β-lactam ----
   if(f.dedicated){
@@ -1337,7 +1359,7 @@ function stepList(){
     {t:'วางสายการผลิตตามลำดับ (ทิศเดียว)', cl:'ข้อ 36 · Minimum Movement', rooms:[...f.prod,'ipc'],
       desc:'เรียงห้องผลิตให้ต่อเนื่องทิศทางเดียว (unidirectional) ตามลำดับกระบวนการ ไม่ให้งานย้อนทาง — ตรงกับหลัก Minimum Movement + Smooth Flow'},
   ];
-  if(f.sterile) s.push({t:'จัดลำดับเกรดห้องสะอาด + gowning cascade ('+(f.aseptic?'D→C→B→A':'D→C')+')', cl:'ข้อ 358, 360 / Annex 1', rooms:['gowning_d','gowning_c','gowning_b','comp_ster','filtration','fill_asept','fill_term','lyo','capping'],
+  if(f.sterile) s.push({t:'จัดลำดับเกรดห้องสะอาด + gowning cascade ('+(f.aseptic?'D→C→B→A':'D→C')+')', cl:'ข้อ 358, 360 / Annex 1', rooms:['gowning_d','gowning_c','gowning_b','degowning','comp_ster','filtration','fill_asept','fill_term','lyo','capping'],
     desc:'ไล่เกรดความสะอาดจากสกปรกไปสะอาด ('+(f.aseptic?'D→C→B→A':'D→C')+') ห้องต่างเกรดห้ามติดกันเกิน 1 ระดับ และเข้าห้องสะอาดต้องผ่านห้องเปลี่ยนชุด (gowning) เป็นขั้น ๆ'});
   if(f.dedicated){ const nm={bl:'β-lactam',hm:'ฮอร์โมน',cy:'cytotoxic'}[f.dedGroup]||'สายเฉพาะ';
     s.push({t:'แยกสาย '+nm+' เด็ดขาด + แอร์ล็อก/AHU/น้ำแยก', cl:'GMP ข้อ 35', rooms:[...f.prod,f.dedGroup+'_airlock'],
@@ -1374,7 +1396,7 @@ function renderPalette(){
   const box=$('#palette'); box.innerHTML='';
   const f=FORMS[state.form], steps=stepList(), cur=steps[state.step];
   const groups={'Storage':CORE_STORE, 'Production':[...f.prod,'ipc','primary_pack','secondary_pack'],
-    'Airlocks & flow':['corridor','pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','bl_airlock','hm_airlock','cy_airlock'],
+    'Airlocks & flow':['corridor','pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','degowning','bl_airlock','hm_airlock','cy_airlock'],
     'Quality control':['qc_chem','qc_micro','qc_instr','retained'],
     'Support & utilities':['change_room','toilet','canteen','office','ahu','water_sys','workshop','waste']};
   for(const g in groups){

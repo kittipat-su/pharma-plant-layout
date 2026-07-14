@@ -840,6 +840,9 @@ const ROOMS = {
   fg_store:    {th:'คลังยาสำเร็จรูป', en:'FG store', z:'store', w:3,h:2},
   pkg_store:   {th:'คลังวัสดุบรรจุ/ฉลาก', en:'Packaging/label store', z:'store', w:2,h:2},
   returned:    {th:'พื้นที่ของคืน/เรียกคืน', en:'Returned/Recalled', z:'store', w:2,h:2},
+  flam_store:  {th:'คลังสารไวไฟ/ระเบิดได้', en:'Flammable store', z:'store', w:2,h:2},
+  potent_store:{th:'คลังวัตถุออกฤทธิ์สูง/ควบคุม', en:'Secure potent store', z:'store', w:2,h:2},
+  cold_store:  {th:'คลังเย็น/ควบคุมอุณหภูมิ', en:'Cold store', z:'store', w:2,h:2},
   // OSD
   granulation: {th:'แกรนูล', en:'Granulation', z:'grey', w:3,h:2},
   drying:      {th:'อบแห้ง', en:'Drying', z:'grey', w:2,h:2},
@@ -864,6 +867,8 @@ const ROOMS = {
   gowning_c:   {th:'เปลี่ยนชุดเข้า C', en:'Gowning →C', z:'air', w:2,h:1, grade:'C'},
   gowning_b:   {th:'เปลี่ยนชุดเข้า B', en:'Gowning →B', z:'air', w:2,h:1, grade:'B'},
   degowning:   {th:'ถอดชุด/ทางออก (De-gowning)', en:'De-gowning exit', z:'air', w:2,h:1, grade:'C'},
+  isolator:    {th:'ไอโซเลเตอร์ (Grade A ภายใน)', en:'Isolator', z:'white', w:3,h:2, grade:'D'},
+  bfs:         {th:'Blow-Fill-Seal', en:'BFS', z:'white', w:3,h:2, grade:'C'},
   // beta-lactam (สายเฉพาะ + containment)
   bl_granul:   {th:'แกรนูล β-lactam', en:'β-lactam granulation', z:'grey', w:3,h:2, bl:true, ded:'bl', containment:true},
   bl_compress: {th:'ตอกเม็ด β-lactam', en:'β-lactam compression', z:'grey', w:3,h:2, bl:true, ded:'bl', containment:true},
@@ -883,18 +888,24 @@ const ROOMS = {
   ipc:         {th:'ควบคุมระหว่างผลิต (IPC)', en:'In-process control', z:'grey', w:2,h:2},
   primary_pack:{th:'บรรจุปฐมภูมิ', en:'Primary packaging', z:'grey', w:3,h:2},
   secondary_pack:{th:'บรรจุทุติยภูมิ', en:'Secondary pack', z:'black', w:3,h:2},
+  eq_wash:     {th:'ล้างเครื่องมือ/อุปกรณ์', en:'Equipment wash', z:'grey', w:3,h:2},
+  eq_store:    {th:'คลังเครื่องมือสะอาด', en:'Clean equipment store', z:'grey', w:2,h:2},
   // airlocks & circulation
   corridor:    {th:'ทางเดิน', en:'Corridor', z:'air', w:4,h:1},
   pal:         {th:'Personnel Airlock', en:'PAL / gowning', z:'air', w:2,h:2},
   mal:         {th:'Material Airlock', en:'MAL', z:'air', w:2,h:1},
   passbox:     {th:'พาสบ็อกซ์', en:'Pass box', z:'air', w:2,h:1, overlay:true},
   gowning:     {th:'ห้องเปลี่ยนชุด', en:'Change room', z:'air', w:2,h:2},
+  dedust:      {th:'ทำความสะอาดภาชนะขาเข้า (De-dust)', en:'De-dust airlock', z:'air', w:2,h:1},
+  qc_gown:     {th:'เปลี่ยนชุดเข้า QC', en:'QC gowning', z:'air', w:2,h:1},
   // QC
   qc_chem:     {th:'แล็บเคมี', en:'QC chemistry', z:'store', w:3,h:2},
   qc_micro:    {th:'แล็บจุลชีววิทยา', en:'QC microbiology', z:'store', w:3,h:2},
   qc_instr:    {th:'ห้องเครื่องมือ', en:'Instruments', z:'store', w:2,h:2},
   retained:    {th:'เก็บตัวอย่างสำรอง', en:'Retained samples', z:'store', w:2,h:2},
+  qc_receipt:  {th:'รับ/เก็บตัวอย่าง QC', en:'QC sample receipt', z:'store', w:2,h:2},
   // welfare / utilities
+  laundry:     {th:'ซักชุดห้องสะอาด', en:'Cleanroom laundry', z:'util', w:2,h:2},
   change_room: {th:'ห้องเปลี่ยนเสื้อผ้า', en:'Locker/change', z:'black', w:2,h:2},
   toilet:      {th:'ห้องน้ำ', en:'Toilet', z:'black', w:2,h:1},
   canteen:     {th:'โรงอาหาร/ห้องพัก', en:'Canteen/rest', z:'black', w:3,h:2},
@@ -915,9 +926,11 @@ const RICON = {
   bl_granul:'r-granule', bl_compress:'r-press', bl_pack:'r-pack', bl_airlock:'r-airlock',
   hm_granul:'r-granule', hm_compress:'r-press', hm_pack:'r-pack', hm_airlock:'r-airlock',
   cy_prep:'r-mix', cy_fill:'r-vial', cy_pack:'r-pack', cy_airlock:'r-airlock',
-  ipc:'r-clipboard', primary_pack:'r-pack', secondary_pack:'r-pack',
-  corridor:'r-corridor', pal:'r-gown', mal:'r-hatch', passbox:'r-hatch', gowning:'r-gown',
-  qc_chem:'r-flask', qc_micro:'r-micro', qc_instr:'r-instr', retained:'r-retain',
+  ipc:'r-clipboard', primary_pack:'r-pack', secondary_pack:'r-pack', eq_wash:'r-water', eq_store:'r-store',
+  corridor:'r-corridor', pal:'r-gown', mal:'r-hatch', passbox:'r-hatch', gowning:'r-gown', dedust:'r-hatch', qc_gown:'r-gown',
+  qc_chem:'r-flask', qc_micro:'r-micro', qc_instr:'r-instr', retained:'r-retain', qc_receipt:'r-inbound',
+  flam_store:'r-store', potent_store:'r-locker', cold_store:'r-freeze', laundry:'r-gown',
+  isolator:'r-vial', bfs:'r-bottle',
   change_room:'r-locker', toilet:'r-toilet', canteen:'r-food', office:'r-office',
   ahu:'r-fan', water_sys:'r-water', workshop:'r-wrench', waste:'r-waste'
 };
@@ -925,7 +938,7 @@ const ricon = id => RICON[id] || 'r-store';
 
 /* ---------- ชุดห้องต่อรูปแบบยา + ลำดับการผลิต ---------- */
 const CORE_STORE = ['receiving','quarantine','sampling','released','rejected','dispensing','fg_store'];
-const CORE_SUP = ['corridor','pal','mal','passbox','gowning','qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste','ipc','primary_pack','secondary_pack','pkg_store','returned'];
+const CORE_SUP = ['corridor','pal','mal','passbox','gowning','dedust','qc_chem','qc_micro','qc_instr','retained','qc_receipt','qc_gown','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste','laundry','ipc','primary_pack','secondary_pack','eq_wash','eq_store','pkg_store','returned','flam_store','potent_store','cold_store'];
 
 const FORMS = {
   osd: {name:'ยาเม็ด/แคปซูล (OSD, non-sterile)', sterile:false,
@@ -939,10 +952,10 @@ const FORMS = {
     rooms:[...CORE_STORE,'mix_semi','fill_tube',...CORE_SUP]},
   sterile_term: {name:'ยาปราศจากเชื้อ — ฆ่าเชื้อขั้นสุดท้าย', sterile:true,
     prod:['comp_ster','fill_term','autoclave','capping'],
-    rooms:[...CORE_STORE,'comp_ster','fill_term','autoclave','capping','gowning_d','gowning_c','degowning',...CORE_SUP]},
+    rooms:[...CORE_STORE,'comp_ster','fill_term','autoclave','capping','gowning_d','gowning_c','degowning','bfs',...CORE_SUP]},
   sterile_asept: {name:'ยาปราศจากเชื้อ — กระบวนการปลอดเชื้อ (Aseptic)', sterile:true, aseptic:true,
     prod:['comp_ster','filtration','fill_asept','lyo','capping'],
-    rooms:[...CORE_STORE,'comp_ster','filtration','fill_asept','lyo','capping','gowning_d','gowning_c','gowning_b','degowning',...CORE_SUP]},
+    rooms:[...CORE_STORE,'comp_ster','filtration','fill_asept','lyo','capping','gowning_d','gowning_c','gowning_b','degowning','isolator','bfs',...CORE_SUP]},
   betalactam: {name:'β-lactam เฉพาะสาย (Dedicated)', sterile:false, dedicated:true, dedGroup:'bl',
     prod:['bl_granul','bl_compress','bl_pack'],
     rooms:[...CORE_STORE,'bl_granul','bl_compress','bl_pack','bl_airlock',...CORE_SUP]},
@@ -955,7 +968,7 @@ const FORMS = {
 };
 
 /* ---------- กลุ่มอ้างอิงสำหรับกฎ ---------- */
-const AIRLOCKS = ['pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','degowning','corridor','bl_airlock','hm_airlock','cy_airlock'];
+const AIRLOCKS = ['pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','degowning','dedust','corridor','bl_airlock','hm_airlock','cy_airlock'];
 const GOWNINGS = ['pal','gowning','gowning_d','gowning_c','gowning_b'];
 const BLACK = ['receiving','secondary_pack','change_room','toilet','canteen','office','workshop','waste'];
 const WELFARE_KEEPAWAY = ['toilet','canteen'];
@@ -1053,19 +1066,25 @@ const CLASS_DEFAULTS = {
 };
 // ห้องที่มีฝุ่นฟุ้ง (ต้องมีระบบดูดฝุ่น ข้อ 42/43)
 const DUST = new Set(['dispensing','sampling','granulation','drying','blending','compression','coating','primary_pack','capping','bl_granul','bl_compress','bl_pack','hm_granul','hm_compress','hm_pack','cy_pack','mix_semi']);
+// ห้องเปียก (มีอ่างล้าง/ท่อระบายน้ำโดยปริยาย — ห้ามในเกรด A/B ข้อ 357)
+const WET = new Set(['eq_wash','laundry','toilet','qc_chem','qc_micro']);
 const CLASS_OPTS = ['A','B','C','D','CNC','—'];
 function classRank(c){ return gradeRank[c]||0; }
 function computeEnv(p){
-  const r=ROOMS[p.id]||{}, g=r.grade, base=g?CLASS_DEFAULTS[g]:null, e=p.env||{};
+  const r=ROOMS[p.id]||{}, g=r.grade, e=p.env||{};
+  // ถ้านิสิตตั้ง class เอง ให้ค่าเริ่มต้นอื่น ๆ (dP/T/RH/ACH/airflow/lux) ตามเกรดนั้น ไม่ใช่เกรดคงที่ของห้อง
+  const effG = (e.cls && CLASS_DEFAULTS[e.cls]) ? e.cls : g;
+  const base = effG?CLASS_DEFAULTS[effG]:null;
   const num=(v,d)=> (v===''||v==null||isNaN(+v))? d : +v;
   return {
     cls: e.cls || g || (r.containment?'CNC':(r.z==='white'?'?':(r.z==='grey'?'CNC':'—'))),
     T:   num(e.T, base?base.T:''),
     RH:  num(e.RH, base?base.RH:''),
-    dP:  num(e.dP, roomPressure(p.id)),
+    dP:  num(e.dP, base?base.dP:roomPressure(p.id)),
     ach: num(e.ach, base?base.ach:''),
-    airflow: e.airflow || ((e.cls==='A'||g==='A')?'UDAF':'turbulent'),   // เกรด A (ตามผังหรือที่ตั้ง class=A) → UDAF โดยปริยาย
+    airflow: e.airflow || (effG==='A'?'UDAF':'turbulent'),   // เกรด A (ตามผังหรือที่ตั้ง class=A) → UDAF โดยปริยาย
     dust: e.dust!=null? !!e.dust : DUST.has(p.id),
+    drain: e.drain!=null? !!e.drain : WET.has(p.id),
     ahu: e.ahu || '',
     lux: num(e.lux, base?base.lux:''),
   };
@@ -1077,7 +1096,7 @@ function buildRules(){
   const f = FORMS[state.form], R=[];
 
   // ผังต้องไม่ซ้อนกัน — กันการ "โกง" ด้วยการวางห้องทับกัน
-  R.push({cl:'ผังต้องไม่ซ้อนกัน', pr:'Space Utilization', th:'ห้องไม่วางซ้อนทับกัน — แต่ละพื้นที่ต้องแยกกายภาพ',
+  R.push({cl:'ข้อ 37 / PIC/S 3.8 · ผังต้องไม่ซ้อนกัน', pr:'Space Utilization', th:'ห้องไม่วางซ้อนทับกัน — แต่ละพื้นที่ต้องแยกกายภาพ',
     run:()=>{ const ov=overlappingIds(); return ov.length?
       {s:'fail',d:'มีห้องวางทับกัน แต่ละห้องต้องเป็นพื้นที่แยกจากกัน (ลากให้ไม่ทับ)',rooms:ov}:{s:'pass'}; }});
 
@@ -1086,11 +1105,11 @@ function buildRules(){
        {s:'fail',d:'ต้องแยกพื้นที่วัตถุดิบตามสถานะ เพื่อกัน mix-up'}});
 
   // ความครบถ้วน — กันการ "โกง" ด้วยการลบห้องผลิตออก
-  R.push({cl:'ความครบถ้วนของผัง', pr:'Overall Integration', th:'วางห้องผลิตครบทุกขั้นตามรูปแบบยา',
+  R.push({cl:'ข้อ 36 · ความครบถ้วนของผัง', pr:'Overall Integration', th:'วางห้องผลิตครบทุกขั้นตามรูปแบบยา',
     run:()=>{ const miss=prodIds().filter(id=>!has(id));
       return miss.length?{s:'fail',d:'ยังขาดห้องผลิต: '+miss.map(id=>ROOMS[id].th).join(', ')}:{s:'pass'}; }});
 
-  R.push({cl:'ข้อ 47, 52 / PIC/S 3.22', pr:'Safety', th:'ของไม่ผ่าน (Rejected) แยกจากคลังปล่อยผ่าน',
+  R.push({cl:'ข้อ 47, 52 / PIC/S 3.23', pr:'Safety', th:'ของไม่ผ่าน (Rejected) แยกจากคลังปล่อยผ่าน',
     run:()=> (!has('rejected')||!has('released'))?{s:'na'}:
        (!adjIds('rejected','released')?{s:'pass'}:{s:'warn',d:'ควรกันบริเวณ/แยกให้ชัด',rooms:['rejected','released']})});
 
@@ -1124,19 +1143,19 @@ function buildRules(){
        WELFARE_KEEPAWAY.filter(has).forEach(w=>{ rel.forEach(r=>{ if(adjIds(w,r)){ badset.add(w); badset.add(r); } }); });
        return WELFARE_KEEPAWAY.some(has)?(badset.size?{s:'fail',d:'ห้องน้ำ/โรงอาหารติดพื้นที่ผลิต/จัดเก็บ',rooms:[...badset]}:{s:'pass'}):{s:'na'}; }});
 
-  R.push({cl:'ข้อ 36 · Minimum Movement', pr:'Minimum Movement · Smooth Flow', th:'สายการผลิตเรียงต่อเนื่องทิศเดียว (unidirectional)',
+  R.push({cl:'ข้อ 36 / PIC/S 3.7 · Minimum Movement', pr:'Minimum Movement · Smooth Flow', th:'สายการผลิตเรียงต่อเนื่องทิศเดียว (unidirectional)',
     run:()=>{ const seq=prodIds().filter(has); if(seq.length<2) return {s:'na'};
        const bad=[]; for(let i=0;i<seq.length-1;i++){ if(!adjIds(seq[i],seq[i+1])){ bad.push(seq[i],seq[i+1]); } }
        return bad.length?{s:'warn',d:'ห้องผลิตควรเรียงติดกันตามลำดับ ไม่ให้งานย้อนทาง',rooms:[...new Set(bad)]}:{s:'pass'};}});
 
   if(!f.sterile){
-    R.push({cl:'Material flow', pr:'Smooth Flow', th:'มี Material Airlock / Pass box คั่นระหว่างคลัง↔ผลิต',
+    R.push({cl:'ข้อ 41 · Material flow', pr:'Smooth Flow', th:'มี Material Airlock / Pass box คั่นระหว่างคลัง↔ผลิต',
       run:()=> placedProd().length===0?{s:'na'}:
          (hasMaterialAirlock()?{s:'pass'}:{s:'warn',d:'ควรมี MAL/พาสบ็อกซ์ ส่งวัตถุดิบเข้าโดยไม่ปนทางคน'})});
   }
 
   // แยกแอร์ล็อกคน–วัตถุดิบ (คนผ่าน PAL/ห้องเปลี่ยนชุด · ของผ่าน MAL/พาสบ็อกซ์ — ไม่ใช้ทางเดียวกัน)
-  R.push({cl:'PIC/S 3.16 · แยกแอร์ล็อกคน–วัตถุดิบ', pr:'Smooth Flow', th:'แยกแอร์ล็อกทางเข้าคน (PAL/ห้องเปลี่ยนชุด) ออกจากทางเข้าวัตถุดิบ (MAL/พาสบ็อกซ์) ไม่ให้คนกับของเข้าทางเดียวกัน',
+  R.push({cl:'Annex 1 §4.12 · แยกแอร์ล็อกคน–วัตถุดิบ', pr:'Smooth Flow', th:'แยกแอร์ล็อกทางเข้าคน (PAL/ห้องเปลี่ยนชุด) ออกจากทางเข้าวัตถุดิบ (MAL/พาสบ็อกซ์) ไม่ให้คนกับของเข้าทางเดียวกัน',
     run:()=>{ if(placedProd().length===0) return {s:'na'};
       const hasPAL=GOWNINGS.some(has), hasMAL=hasMaterialAirlock();
       if(hasPAL&&hasMAL) return {s:'pass'};
@@ -1148,18 +1167,18 @@ function buildRules(){
        (placedProd().some(pid=>adjIds('waste',pid))?{s:'warn',d:'พื้นที่ของเสียไม่ควรติดห้องผลิตโดยตรง',rooms:['waste']}:{s:'pass'})});
 
   // (3) วัสดุบรรจุ/ฉลากที่พิมพ์แล้ว ต้องเก็บแยกและควบคุมการเบิกจ่าย กันหยิบผิด/ปนรุ่น
-  R.push({cl:'PIC/S 3.24 · วัสดุบรรจุ/ฉลาก', pr:'Safety', th:'มีคลังเก็บวัสดุบรรจุ/ฉลากที่พิมพ์แล้วแยกและควบคุม (กันฉลาก/วัสดุบรรจุปนรุ่น mix-up)',
+  R.push({cl:'ข้อ 54 / PIC/S 3.25 · วัสดุบรรจุ/ฉลาก', pr:'Safety', th:'มีคลังเก็บวัสดุบรรจุ/ฉลากที่พิมพ์แล้วแยกและควบคุม (กันฉลาก/วัสดุบรรจุปนรุ่น mix-up)',
     run:()=> (!has('secondary_pack')&&!has('primary_pack'))?{s:'na'}:
        (has('pkg_store')?{s:'pass'}:{s:'warn',d:'ควรมีคลังวัสดุบรรจุ/ฉลากแยกและควบคุมการเบิกจ่าย เพื่อกันฉลาก/วัสดุบรรจุปนรุ่น (mix-up)'})});
 
   // (5) พื้นที่ของคืน/เรียกคืน ต้องแยกกันปนกับของที่ปล่อยผ่าน/สายผลิต
-  R.push({cl:'PIC/S 3.22 · ของคืน/เรียกคืน', pr:'Safety', th:'พื้นที่ของคืน/เรียกคืน แยกและกันจากคลังปล่อยผ่าน/ยาสำเร็จ/สายผลิต',
+  R.push({cl:'ข้อ 52 / PIC/S 3.23 · ของคืน/เรียกคืน', pr:'Safety', th:'พื้นที่ของคืน/เรียกคืน แยกและกันจากคลังปล่อยผ่าน/ยาสำเร็จ/สายผลิต',
     run:()=>{ if(!has('returned')) return {s:'na'};
       const bad=[]; ['released','fg_store',...placedProd()].forEach(r=>{ if(has(r)&&adjIds('returned',r)) bad.push('returned',r); });
       return bad.length?{s:'warn',d:'พื้นที่ของคืน/เรียกคืนติดคลังปล่อยผ่าน/ยาสำเร็จ/สายผลิตโดยตรง — ควรกันบริเวณ/แยกให้ชัด กันหยิบปน',rooms:[...new Set(bad)]}:{s:'pass'};}});
 
   // (6) สุ่มตัวอย่างวัตถุดิบต้องทำในพื้นที่ควบคุม ไม่เปิดตรงสู่คลังทั่วไป/ภายนอก
-  R.push({cl:'PIC/S 3.22 · สุ่มตัวอย่าง', pr:'Safety', th:'ห้องสุ่มตัวอย่างวัตถุดิบอยู่ในพื้นที่ควบคุม ไม่เปิดตรงสู่คลังรับของ/ทั่วไป',
+  R.push({cl:'ข้อ 51 / PIC/S 3.22 · สุ่มตัวอย่าง', pr:'Safety', th:'ห้องสุ่มตัวอย่างวัตถุดิบอยู่ในพื้นที่ควบคุม ไม่เปิดตรงสู่คลังรับของ/ทั่วไป',
     run:()=>{ if(!has('sampling')) return {s:'na'};
       const bad=[]; ['receiving','secondary_pack','waste'].filter(has).forEach(r=>{ if(adjIds('sampling',r)) bad.push('sampling',r); });
       return bad.length?{s:'warn',d:'ห้องสุ่มตัวอย่างไม่ควรเปิดตรงสู่พื้นที่รับของ/ทั่วไป — ควรอยู่ในพื้นที่ควบคุมหรือมีแอร์ล็อกคั่น',rooms:[...new Set(bad)]}:{s:'pass'};}});
@@ -1170,6 +1189,90 @@ function buildRules(){
       const cors=state.placed.filter(p=>p.id==='corridor' && graded.some(g=>touching(p,g))); if(!cors.length) return {s:'na'};
       const undef=cors.filter(p=>{ const raw=p.env?p.env.dP:undefined; return raw===''||raw==null; });   // เตือนเฉพาะที่ยังไม่ได้ระบุค่า (ตั้ง 0 Pa เป็นทางเดินอ้างอิงก็ผ่าน)
       return undef.length?{s:'warn',d:'ทางเดินที่ติดห้องสะอาดควรระบุความดัน (ΔP) ใน “ข้อมูลห้อง” ให้ชัด — เป็นทางเดินความดันบวก (clean corridor), ลบ (sink) หรือ 0 Pa (อ้างอิง) ก็ได้ แต่ต้องกำหนดตาม cascade',rooms:['corridor']}:{s:'pass'};}});
+
+  // ---- ส่วนสนับสนุนวัสดุ/เครื่องมือ (จาก citation audit) ----
+  // ผังต้องมีห้องล้างเครื่องมือ + คลังเก็บเครื่องมือสะอาด (F-D3-81 ต้องแสดง)
+  R.push({cl:'F-D3-81 ข้อ 10 · ล้าง/เก็บเครื่องมือ', pr:'Overall Integration', th:'ผังต้องมีห้องล้างเครื่องมือ/อุปกรณ์ และคลังเก็บเครื่องมือสะอาด',
+    run:()=>{ if(placedProd().length===0) return {s:'na'};
+      const miss=['eq_wash','eq_store'].filter(id=>!has(id));
+      return miss.length?{s:'warn',d:'ยังขาด: '+miss.map(id=>ROOMS[id].th).join(' · ')+' (ผังที่ยื่น อย. ต้องแสดง)'}:{s:'pass'};}});
+
+  // ห้องล้าง (เปียก) ไม่ควรชนห้องสะอาดเกรดสูง — ประเมินแยกจากกฎความครบถ้วนด้านบน
+  R.push({cl:'PIC/S 3.36 · ห้องล้างไม่ชนห้องสะอาด', pr:'Safety', th:'ห้องล้างเครื่องมือ (เปียก) ไม่เปิดตรงสู่ห้องสะอาดเกรด A/B — งานล้างต้องไม่เป็นแหล่งปนเปื้อน',
+    run:()=>{ if(!has('eq_wash')) return {s:'na'};
+      const bad=[...new Set(state.placed.filter(p=>{ const c=computeEnv(p).cls; return (c==='A'||c==='B') && rectsOf('eq_wash').some(w=>touching(w,p)); }).map(p=>p.id))];
+      return bad.length?{s:'warn',d:'ห้องล้างเครื่องมือ (เปียก) ติดห้องสะอาดเกรด A/B โดยตรง — ควรมีแอร์ล็อก/ทางเดินคั่น',rooms:['eq_wash',...bad]}:{s:'pass'};}});
+
+  // บรรจุปฐมภูมิ (สะอาด) ไม่เปิดตรงสู่พื้นที่ทั่วไป (รวมบรรจุทุติยภูมิ)
+  R.push({cl:'ข้อ 44 / PIC/S 3.15 · แยกพื้นที่บรรจุ', pr:'Safety', th:'บรรจุปฐมภูมิไม่เปิดตรงสู่บรรจุทุติยภูมิ/พื้นที่ทั่วไป — กันปนเปื้อนและปนรุ่น (mix-up)',
+    run:()=>{ if(!has('primary_pack')) return {s:'na'};
+      const bad=BLACK.filter(b=>has(b)&&adjIds('primary_pack',b));
+      return bad.length?{s:'warn',d:'บรรจุปฐมภูมิติดพื้นที่ทั่วไป (บรรจุทุติยภูมิ/รับของ/สำนักงาน ฯลฯ) โดยตรง — ควรมีแอร์ล็อก/ทางเดินคั่น',rooms:['primary_pack',...bad]}:{s:'pass'};}});
+
+  // ภาชนะขาเข้าต้องผ่านจุดทำความสะอาด/แอร์ล็อกก่อนเข้าคลัง (ต้องคั่นจริง ไม่ใช่แค่มีห้อง)
+  R.push({cl:'ข้อ 49 / PIC/S 3.20 · รับของ/ทำความสะอาดภาชนะ', pr:'Smooth Flow', th:'จุดรับของไม่เปิดตรงสู่คลังวัตถุดิบ — ต้องมีจุดทำความสะอาดภาชนะ (De-dust) หรือ MAL คั่นจริง',
+    run:()=>{ if(!has('receiving')) return {s:'na'};
+      const direct=['quarantine','released'].filter(s=>has(s)&&adjIds('receiving',s));
+      if(!direct.length) return {s:'pass'};
+      const sep=['dedust','mal','passbox'].some(a=>has(a)&&adjIds('receiving',a));   // ต้องติดจุดรับของจริง
+      return sep?{s:'pass'}:{s:'warn',d:'จุดรับของติดคลังวัตถุดิบโดยตรง — ต้องมีจุดทำความสะอาดภาชนะ (De-dust) หรือ MAL คั่นระหว่างทาง',rooms:['receiving',...direct]};}});
+
+  // คลังสารไวไฟ — อันตรายอัคคีภัย จึงเข้มกว่า (fail)
+  R.push({cl:'ข้อ 53 · คลังสารไวไฟ (ความปลอดภัย/อัคคีภัย)', pr:'Safety', th:'คลังสารไวไฟ/ระเบิดได้ ต้องแยกจากพื้นที่ผลิตและพื้นที่ที่มีคนอยู่ (ควรแยกอาคาร/ทางออกเฉพาะ)',
+    run:()=>{ if(!has('flam_store')) return {s:'na'};
+      const bad=[...new Set([...placedProd(),...BLACK].filter(o=>has(o)&&adjIds('flam_store',o)))];
+      return bad.length?{s:'fail',d:'คลังสารไวไฟติดพื้นที่ผลิต/พื้นที่ที่มีคนอยู่โดยตรง — ต้องแยก (ควรแยกอาคารและมีทางออกเฉพาะ)',rooms:['flam_store',...bad]}:{s:'pass'};}});
+
+  // คลังวัตถุออกฤทธิ์สูง/ควบคุม — เน้น "ปลอดภัยและล็อกได้" (warn ตามระดับพี่น้องกฎคลัง)
+  R.push({cl:'ข้อ 53 / PIC/S 3.24 · คลังวัตถุออกฤทธิ์สูง', pr:'Safety', th:'วัตถุออกฤทธิ์สูง/ควบคุม เก็บในพื้นที่ปลอดภัย ล็อก/จำกัดการเข้าถึง และไม่เปิดตรงสู่พื้นที่ทั่วไป',
+    run:()=>{ if(!has('potent_store')) return {s:'na'};
+      const bad=BLACK.filter(o=>has(o)&&adjIds('potent_store',o));
+      return bad.length?{s:'warn',d:'คลังวัตถุออกฤทธิ์สูงติดพื้นที่ทั่วไปโดยตรง — ควรอยู่ในพื้นที่จำกัดการเข้าถึง (ติดสายผลิตที่ใช้สารนั้นถือว่าปกติ)',rooms:['potent_store',...bad]}:{s:'pass'};}});
+
+  // ห้ามอ่างล้าง/ท่อระบายน้ำในห้องเกรด A/B
+  R.push({cl:'ข้อ 357 / Annex 1 · ห้าม drain ในเกรด A/B', pr:'Safety', th:'ห้องเกรด A/B ต้องไม่มีอ่างล้างหรือท่อระบายน้ำ',
+    run:()=>{ const ab=state.placed.filter(p=>{ const c=computeEnv(p).cls; return c==='A'||c==='B'; });
+      if(!ab.length) return {s:'na'};
+      const bad=[...new Set(ab.filter(p=>computeEnv(p).drain).map(p=>p.id))];
+      return bad.length?{s:'fail',d:'ห้องเกรด A/B มีอ่างล้าง/ท่อระบายน้ำ — ห้ามเด็ดขาด (ปลดเครื่องหมายใน “ข้อมูลห้อง”)',rooms:bad}:{s:'pass'};}});
+
+  // ซ่อมบำรุงแยกจากพื้นที่จัดเก็บ (ส่วนติดพื้นที่ผลิต กฎ NO OUTSIDE IN จับไปแล้ว)
+  R.push({cl:'ข้อ 61 / PIC/S 3.32 · ซ่อมบำรุง', pr:'Safety', th:'ห้องซ่อมบำรุง/เวิร์กช็อป ไม่เปิดตรงสู่พื้นที่จัดเก็บ — เข้าถึงผ่านทางเดินทั่วไป',
+    run:()=>{ if(!has('workshop')) return {s:'na'};
+      const stores=['released','quarantine','fg_store','rejected','pkg_store','returned','cold_store','dispensing','sampling'];
+      const bad=[...new Set(stores.filter(o=>has(o)&&adjIds('workshop',o)))];
+      return bad.length?{s:'warn',d:'ห้องซ่อมบำรุงไม่ควรติดพื้นที่จัดเก็บโดยตรง — ควรเข้าถึงผ่านทางเดินทั่วไป',rooms:['workshop',...bad]}:{s:'pass'};}});
+
+  // ผัง QC ต้องมีจุดรับตัวอย่าง + ห้องเปลี่ยนชุดเข้า micro
+  R.push({cl:'ข้อ 56 / F-D3-81 ข้อ 16 · ผัง QC', pr:'Overall Integration', th:'ผัง QC ต้องมีจุดรับ/เก็บตัวอย่าง และห้องเปลี่ยนชุดเข้าห้องจุลชีววิทยา',
+    run:()=>{ if(!has('qc_chem')&&!has('qc_micro')) return {s:'na'};
+      const miss=[]; if(!has('qc_receipt')) miss.push('จุดรับ/เก็บตัวอย่าง'); if(has('qc_micro')&&!has('qc_gown')) miss.push('ห้องเปลี่ยนชุด QC');
+      return miss.length?{s:'warn',d:'ผัง QC ที่ยื่น อย. ต้องแสดง: '+miss.join(' · ')}:{s:'pass'};}});
+
+  // แล็บ QC แยกกันเอง — "แยก" = มีทางเข้าของตัวเอง ไม่ใช่ห้ามผนังติดกัน (ผนังติดกันเป็นผังปกติ)
+  R.push({cl:'ข้อ 55 / PIC/S 3.26 · แล็บ QC แยกกันเอง', pr:'Safety', th:'ห้องจุลชีววิทยาต้องมีทางเข้าของตัวเอง ไม่ต้องเดินผ่านแล็บเคมี',
+    run:()=>{ if(!has('qc_micro')||!has('qc_chem')) return {s:'na'};
+      if(!adjIds('qc_micro','qc_chem')) return {s:'pass'};
+      const indep = adjAny('qc_micro',['corridor','qc_gown']) && adjAny('qc_chem',['corridor']);
+      return indep?{s:'pass'}:{s:'warn',d:'ห้องจุลชีววิทยาติดแล็บเคมีและไม่มีทางเข้าของตัวเอง — ต้องเข้าถึงแยกกัน (ผ่านทางเดิน/ห้องเปลี่ยนชุด QC)',rooms:['qc_micro','qc_chem']};}});
+
+  // ห้องเครื่องมือ QC — ควรมีทางเข้าจากทางเดิน ไม่ใช่เปิดตรงเข้าแล็บเปียกอย่างเดียว
+  R.push({cl:'ข้อ 57 / PIC/S 3.28 · ห้องเครื่องมือ QC', pr:'Safety', th:'ห้องเครื่องมือ (ไวต่อการสั่นสะเทือน/ความชื้น) ควรมีทางเข้าจากทางเดิน ไม่เปิดตรงเข้าแล็บเปียกอย่างเดียว',
+    run:()=>{ if(!has('qc_instr')) return {s:'na'};
+      const touchLab=['qc_chem','qc_micro'].filter(o=>has(o)&&adjIds('qc_instr',o));
+      if(!touchLab.length) return {s:'pass'};
+      return adjAny('qc_instr',['corridor'])?{s:'pass'}:{s:'warn',d:'ห้องเครื่องมือติดแล็บเปียก/จุลชีววิทยาและไม่มีทางเข้าจากทางเดิน — ควรเข้าถึงแยก (สั่นสะเทือน/ความชื้น/ไอตัวทำละลาย)',rooms:['qc_instr',...touchLab]};}});
+
+  // ห้อง IPC เฉพาะ (การตรวจระหว่างผลิตไม่ทำในสายเปิด)
+  R.push({cl:'ข้อ 46 · ห้องควบคุมระหว่างผลิต (IPC)', pr:'Overall Integration', th:'มีห้อง IPC เฉพาะ — การตรวจระหว่างผลิตไม่ทำในสายผลิตแบบเปิด',
+    run:()=> placedProd().length===0?{s:'na'}:
+      (has('ipc')?{s:'pass'}:{s:'warn',d:'ควรมีห้องควบคุมระหว่างผลิต (IPC) แยก โดยเฉพาะเมื่อการตรวจก่อให้เกิดฝุ่น'})});
+
+  // คลังเย็น/ควบคุมอุณหภูมิ ต้องระบุช่วงอุณหภูมิ
+  R.push({cl:'ข้อ 48 / F-D3-81 ข้อ 14 · โซนควบคุมอุณหภูมิ', pr:'Overall Integration', th:'คลังเย็น/ควบคุมอุณหภูมิ ต้องระบุช่วงอุณหภูมิใน “ข้อมูลห้อง”',
+    run:()=>{ if(!has('cold_store')) return {s:'na'};
+      const bad=state.placed.filter(p=>p.id==='cold_store').some(p=>{ const raw=p.env?p.env.T:undefined; return raw===''||raw==null||!(+raw<=8); });
+      return bad?{s:'warn',d:'ระบุอุณหภูมิเป้าหมายของคลังเย็นเป็นตัวเลขใน “ข้อมูลห้อง” (ช่วงควบคุมทั่วไป 2–8 °C)',rooms:['cold_store']}:{s:'pass'};}});
 
   // ---- Sterile ----
   if(f.sterile){
@@ -1200,7 +1303,7 @@ function buildRules(){
           :{s:'fail',d:'Grade A ต้องอยู่ใน background B และเข้าถึงผ่าน gowning B โดยตรง',rooms:['fill_asept']})});
 
     // แยกก่อน–หลังฆ่าเชื้อขั้นสุดท้าย: ผลิตภัณฑ์ต้องผ่านเครื่องฆ่าเชื้อ (double-door) ไม่ลัดข้ามไปคลังยาสำเร็จ
-    R.push({cl:'Annex 1 · ก่อน–หลังฆ่าเชื้อ', pr:'Safety', th:'แยกพื้นที่ก่อน/หลังการฆ่าเชื้อขั้นสุดท้าย — ผลิตภัณฑ์ผ่านเครื่องฆ่าเชื้อ (2 ประตู) กันของที่ผ่าน↔ยังไม่ผ่านปะปนกัน',
+    R.push({cl:'ข้อ 395, 309 / Annex 1 · ก่อน–หลังฆ่าเชื้อ', pr:'Safety', th:'แยกพื้นที่ก่อน/หลังการฆ่าเชื้อขั้นสุดท้าย — ผลิตภัณฑ์ผ่านเครื่องฆ่าเชื้อ (2 ประตู) กันของที่ผ่าน↔ยังไม่ผ่านปะปนกัน',
       run:()=>{ if(!has('autoclave')) return {s:'na'};
         const pre=['fill_term','comp_ster','filtration'].filter(has); if(!pre.length) return {s:'na'};
         const bad=[]; pre.forEach(a=>{ if(adjIds(a,'fg_store')) bad.push(a,'fg_store'); });   // บรรจุก่อนฆ่าเชื้อติดคลังยาสำเร็จตรง = ลัดข้ามเครื่องฆ่าเชื้อ
@@ -1216,8 +1319,22 @@ function buildRules(){
     R.push({cl:'F-D3-81 ข้อ 19 · ระบบน้ำ', pr:'Safety', th:'สายปลอดเชื้อต้องมีระบบน้ำบริสุทธิ์ (PW/WFI) รองรับพื้นที่สะอาด',
       run:()=> has('water_sys')?{s:'pass'}:{s:'warn',d:'การผลิตปลอดเชื้อต้องมีระบบน้ำบริสุทธิ์/น้ำสำหรับฉีด (PW/WFI) — เพิ่มห้องระบบน้ำ'}});
 
+    // ชุดห้องสะอาดที่ใช้ซ้ำ ต้องซักในพื้นที่แยก
+    R.push({cl:'ข้อ 352 / Annex 1 §7.17 · ซักชุดห้องสะอาด', pr:'Overall Integration', th:'ชุดห้องสะอาดที่ใช้ซ้ำ ต้องซักในพื้นที่แยกจากงานอื่น',
+      run:()=> placedProd().length===0?{s:'na'}:
+        (has('laundry')?{s:'pass'}:{s:'warn',d:'ควรมีห้องซักชุดห้องสะอาดแยกจากพื้นที่อื่น'})});
+
+    // เกรดพื้นหลังขั้นต่ำของไอโซเลเตอร์ / BFS — ต้อง "ประกาศ" เกรดพื้นหลังเอง แล้วจึงตรวจว่าถึงขั้นต่ำ
+    R.push({cl:'ข้อ 330, 333–334 · เกรดขั้นต่ำ Isolator/BFS', pr:'Safety', th:'ระบุเกรดพื้นหลัง: ไอโซเลเตอร์ ≥ D · BFS ปลอดเชื้อ ≥ C (ฆ่าเชื้อขั้นสุดท้าย ≥ D)',
+      run:()=>{ const items=state.placed.filter(p=>p.id==='isolator'||p.id==='bfs'); if(!items.length) return {s:'na'};
+        const undecl=[...new Set(items.filter(p=>!(p.env&&p.env.cls)).map(p=>p.id))];
+        if(undecl.length) return {s:'warn',d:'ยังไม่ได้ระบุเกรดพื้นหลังใน “ข้อมูลห้อง” — ไอโซเลเตอร์ ≥ D, BFS ปลอดเชื้อ ≥ C (ฆ่าเชื้อขั้นสุดท้าย ≥ D)',rooms:undecl};
+        const bad=[...new Set(items.filter(p=>{ const rank=classRank(computeEnv(p).cls);
+          return p.id==='isolator' ? rank<gradeRank.D : rank<(f.aseptic?gradeRank.C:gradeRank.D); }).map(p=>p.id))];
+        return bad.length?{s:'fail',d:'พื้นหลังต่ำกว่าเกณฑ์ขั้นต่ำ — ไอโซเลเตอร์ ≥ D, BFS ปลอดเชื้อ ≥ C (ฆ่าเชื้อขั้นสุดท้าย ≥ D)',rooms:bad}:{s:'pass'};}});
+
     // (9) การปิดจุกขวดปลอดเชื้อ (capping) เป็นจุดวิกฤต ควรอยู่ใต้อากาศเกรด A (RABS/UDAF)
-    if(f.aseptic) R.push({cl:'ข้อ 310, 361 / Annex 1 · ปิดจุก (RABS)', pr:'Safety', th:'การปิดจุก (capping) ในกระบวนการปลอดเชื้อ ควรอยู่ภายใต้อากาศเกรด A (RABS/UDAF)',
+    if(f.aseptic) R.push({cl:'ข้อ 427, 426 / Annex 1 §8.27 · ปิดจุก (RABS)', pr:'Safety', th:'การปิดจุก (capping) ในกระบวนการปลอดเชื้อ ควรอยู่ภายใต้อากาศเกรด A (RABS/UDAF)',
       run:()=>{ if(!has('capping')) return {s:'na'};
         const bad=state.placed.some(p=>p.id==='capping' && computeEnv(p).airflow!=='UDAF');
         return bad?{s:'warn',d:'ปิดจุกขวดปลอดเชื้อเป็นจุดวิกฤต ควรตั้งให้อยู่ใต้ UDAF/อากาศเกรด A (RABS) — ตั้ง airflow=UDAF ใน “ข้อมูลห้อง”'}:{s:'pass'};}});
@@ -1388,14 +1505,14 @@ function renderForm(){
 function stepList(){
   const f=FORMS[state.form];
   const s=[
-    {t:'คลังวัตถุดิบ + การไหลของวัตถุดิบ (รับ→กักกัน→สุ่ม→ปล่อยผ่าน)', cl:'ข้อ 47 / PIC/S 3.18–3.22', rooms:['receiving','quarantine','sampling','released','rejected'],
-      desc:'วางพื้นที่รับและจัดเก็บวัตถุดิบ โดยแยกตามสถานะให้ชัด (กักกัน / ปล่อยผ่าน / ไม่ผ่าน) เพื่อกันการหยิบผิด (mix-up) และการปนเปื้อนข้าม'},
+    {t:'คลังวัตถุดิบ + การไหลของวัตถุดิบ (รับ→กักกัน→สุ่ม→ปล่อยผ่าน)', cl:'ข้อ 47 / PIC/S 3.18–3.23', rooms:['receiving','dedust','quarantine','sampling','released','rejected','returned','cold_store','flam_store','potent_store','pkg_store'],
+      desc:'วางพื้นที่รับและจัดเก็บวัตถุดิบ โดยแยกตามสถานะให้ชัด (กักกัน / ปล่อยผ่าน / ไม่ผ่าน / ของคืน) เพื่อกันการหยิบผิด (mix-up) และการปนเปื้อนข้าม · ภาชนะขาเข้าต้องผ่านจุดทำความสะอาด (De-dust) ก่อนเข้าคลัง · วัสดุบรรจุ/ฉลาก และสารไวไฟ/ออกฤทธิ์สูง เก็บแยกและควบคุม'},
     {t:'ห้องชั่ง/จ่าย + Material Airlock', cl:'ข้อ 42, 41', rooms:['dispensing','mal'],
       desc:'วางห้องชั่ง/จ่ายวัตถุดิบ และให้เข้าถึงผ่าน Material Airlock (MAL) ไม่เปิดตรงสู่ภายนอก เพื่อควบคุมการฟุ้งกระจายของผง'},
-    {t:'วางสายการผลิตตามลำดับ (ทิศเดียว)', cl:'ข้อ 36 · Minimum Movement', rooms:[...f.prod,'ipc'],
-      desc:'เรียงห้องผลิตให้ต่อเนื่องทิศทางเดียว (unidirectional) ตามลำดับกระบวนการ ไม่ให้งานย้อนทาง — ตรงกับหลัก Minimum Movement + Smooth Flow'},
+    {t:'วางสายการผลิตตามลำดับ (ทิศเดียว) + ล้าง/เก็บเครื่องมือ', cl:'ข้อ 36 / PIC/S 3.7', rooms:[...f.prod,'ipc','eq_wash','eq_store'],
+      desc:'เรียงห้องผลิตให้ต่อเนื่องทิศทางเดียว (unidirectional) ตามลำดับกระบวนการ ไม่ให้งานย้อนทาง — ตรงกับหลัก Minimum Movement + Smooth Flow · ผังต้องมีห้องล้างเครื่องมือและคลังเก็บเครื่องมือสะอาด และห้องล้าง (เปียก) ต้องไม่ชนห้องสะอาดเกรดสูง'},
   ];
-  if(f.sterile) s.push({t:'จัดลำดับเกรดห้องสะอาด + gowning cascade ('+(f.aseptic?'D→C→B→A':'D→C')+')', cl:'ข้อ 358, 360 / Annex 1', rooms:['gowning_d','gowning_c','gowning_b','degowning','comp_ster','filtration','fill_asept','fill_term','lyo','capping'],
+  if(f.sterile) s.push({t:'จัดลำดับเกรดห้องสะอาด + gowning cascade ('+(f.aseptic?'D→C→B→A':'D→C')+')', cl:'ข้อ 358, 360 / Annex 1', rooms:['gowning_d','gowning_c','gowning_b','degowning','laundry','comp_ster','filtration','fill_asept','fill_term','lyo','capping','isolator','bfs'],
     desc:'ไล่เกรดความสะอาดจากสกปรกไปสะอาด ('+(f.aseptic?'D→C→B→A':'D→C')+') ห้องต่างเกรดห้ามติดกันเกิน 1 ระดับ และเข้าห้องสะอาดต้องผ่านห้องเปลี่ยนชุด (gowning) เป็นขั้น ๆ'});
   if(f.dedicated){ const nm={bl:'β-lactam',hm:'ฮอร์โมน',cy:'cytotoxic'}[f.dedGroup]||'สายเฉพาะ';
     s.push({t:'แยกสาย '+nm+' เด็ดขาด + แอร์ล็อก/AHU/น้ำแยก', cl:'GMP ข้อ 35', rooms:[...f.prod,f.dedGroup+'_airlock'],
@@ -1404,8 +1521,8 @@ function stepList(){
     desc:'จัดทางเดินและ Personnel Airlock ให้บุคลากรเข้าสู่พื้นที่ผลิตทางเดียว ผ่านห้องเปลี่ยนชุด ไม่ปนกับเส้นทางวัตถุดิบ'});
   s.push({t:'บรรจุ + คลังยาสำเร็จรูป', cl:'PIC/S 5', rooms:['primary_pack','secondary_pack','fg_store'],
     desc:'วางพื้นที่บรรจุปฐมภูมิ/ทุติยภูมิ และคลังยาสำเร็จรูปที่ปลายสาย ให้ผลิตภัณฑ์ไหลออกทิศทางเดียวสู่คลัง'});
-  s.push({t:'QC — แยกห้องจุลชีววิทยาออกจากผลิต', cl:'ข้อ 55 / PIC/S 6', rooms:['qc_chem','qc_micro','qc_instr','retained'],
-    desc:'แยกห้องปฏิบัติการ QC ออกจากพื้นที่ผลิต โดยเฉพาะห้องจุลชีววิทยา (Micro) ที่ห้ามติดพื้นที่ผลิตเพื่อกันการปนเปื้อนข้าม'});
+  s.push({t:'QC — แยกห้องจุลชีววิทยาออกจากผลิต', cl:'ข้อ 55, 56 / PIC/S 3.26', rooms:['qc_chem','qc_micro','qc_instr','retained','qc_receipt','qc_gown'],
+    desc:'แยกห้องปฏิบัติการ QC ออกจากพื้นที่ผลิต โดยเฉพาะห้องจุลชีววิทยา (Micro) ที่ห้ามติดพื้นที่ผลิตเพื่อกันการปนเปื้อนข้าม · ผัง QC ที่ยื่น อย. ต้องแสดงจุดรับ/เก็บตัวอย่าง และห้องเปลี่ยนชุดเข้า micro · micro ต้องมีทางเข้าของตัวเอง ไม่เดินผ่านแล็บเคมี'});
   s.push({t:'สวัสดิการ + ระบบสนับสนุน (อย่าให้ชนพื้นที่ผลิต)', cl:'ข้อ 60 / PIC/S 3.30–3.31', rooms:['toilet','canteen','office','ahu','water_sys','workshop','waste'],
     desc:'วางสวัสดิการและระบบสนับสนุน โดยห้องน้ำ/โรงอาหารต้องไม่เปิดตรงสู่พื้นที่ผลิตหรือจัดเก็บ'});
   s.push({t:'วาดเส้นทางการไหลเอง (ปุ่มปากกา “วาด”) → ตรวจ crossover → แก้จุดที่ไขว้', cl:'ตรวจสอบ', rooms:[],
@@ -1431,10 +1548,11 @@ function renderSteps(){
 function renderPalette(){
   const box=$('#palette'); box.innerHTML='';
   const f=FORMS[state.form], steps=stepList(), cur=steps[state.step];
-  const groups={'Storage':[...CORE_STORE,'pkg_store','returned'], 'Production':[...f.prod,'ipc','primary_pack','secondary_pack'],
-    'Airlocks & flow':['corridor','pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','degowning','bl_airlock','hm_airlock','cy_airlock'],
-    'Quality control':['qc_chem','qc_micro','qc_instr','retained'],
-    'Support & utilities':['change_room','toilet','canteen','office','ahu','water_sys','workshop','waste']};
+  const groups={'Storage':[...CORE_STORE,'pkg_store','returned','flam_store','potent_store','cold_store'],
+    'Production':[...f.prod,'isolator','bfs','ipc','primary_pack','secondary_pack','eq_wash','eq_store'],
+    'Airlocks & flow':['corridor','pal','mal','passbox','dedust','gowning','gowning_d','gowning_c','gowning_b','degowning','bl_airlock','hm_airlock','cy_airlock'],
+    'Quality control':['qc_chem','qc_micro','qc_instr','retained','qc_receipt','qc_gown'],
+    'Support & utilities':['change_room','toilet','canteen','office','laundry','ahu','water_sys','workshop','waste']};
   for(const g in groups){
     const ids=groups[g].filter(id=>f.rooms.includes(id));
     if(!ids.length) continue;
@@ -1569,6 +1687,7 @@ function renderInspector(){
     `<label class="insp-f"><span>Airflow</span><select data-f="airflow"><option ${e.airflow==='UDAF'?'selected':''}>UDAF</option><option ${e.airflow==='turbulent'?'selected':''}>turbulent</option></select></label>`+
     f('AHU','ahu',e.ahu,'')+f('Lux','lux',e.lux,'type="number"')+
     `<label class="insp-f insp-chk"><input type="checkbox" data-f="dust" ${e.dust?'checked':''}><span>มีระบบดูดฝุ่น</span></label>`+
+    `<label class="insp-f insp-chk"><input type="checkbox" data-f="drain" ${e.drain?'checked':''}><span>มีอ่างล้าง/ท่อระบายน้ำ (ห้ามในเกรด A/B)</span></label>`+
     `</div>`;
   box.querySelectorAll('[data-f]').forEach(inp=>inp.addEventListener('change',()=>{
     const fl=inp.dataset.f, v = inp.type==='checkbox'?inp.checked:(inp.type==='number'?(inp.value===''?'':+inp.value):inp.value);
@@ -1579,14 +1698,14 @@ function renderInspector(){
 /* ---------- B3: ตารางข้อมูลห้อง (Room Data Schedule) ---------- */
 function scheduleRows(){
   return state.placed.map(p=>{ const r=ROOMS[p.id], e=computeEnv(p);
-    return {room:r.th, cls:e.cls, T:e.T===''?'–':e.T, RH:e.RH===''?'–':e.RH, dP:e.dP, airflow:e.airflow, ach:e.ach===''?'–':e.ach, ahu:e.ahu||'–', dust:e.dust?'✓':'–', lux:e.lux===''?'–':e.lux}; });
+    return {room:r.th, cls:e.cls, T:e.T===''?'–':e.T, RH:e.RH===''?'–':e.RH, dP:e.dP, airflow:e.airflow, ach:e.ach===''?'–':e.ach, ahu:e.ahu||'–', dust:e.dust?'✓':'–', drain:e.drain?'✓':'–', lux:e.lux===''?'–':e.lux}; });
 }
 function scheduleTableHTML(){
-  const head=['ห้อง','Class','T°C','%RH','ΔP(Pa)','Airflow','ACH','AHU','ดูดฝุ่น','Lux'];
+  const head=['ห้อง','Class','T°C','%RH','ΔP(Pa)','Airflow','ACH','AHU','ดูดฝุ่น','Drain','Lux'];
   const rows=scheduleRows();
   if(!rows.length) return '<div class="insp-empty">ยังไม่มีห้องบนผัง</div>';
   return `<table class="sched"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`+
-    rows.map(r=>`<tr><td>${r.room}</td><td>${r.cls}</td><td>${r.T}</td><td>${r.RH}</td><td>${r.dP}</td><td>${r.airflow}</td><td>${r.ach}</td><td>${r.ahu}</td><td>${r.dust}</td><td>${r.lux}</td></tr>`).join('')+`</tbody></table>`;
+    rows.map(r=>`<tr><td>${r.room}</td><td>${r.cls}</td><td>${r.T}</td><td>${r.RH}</td><td>${r.dP}</td><td>${r.airflow}</td><td>${r.ach}</td><td>${r.ahu}</td><td>${r.dust}</td><td>${r.drain}</td><td>${r.lux}</td></tr>`).join('')+`</tbody></table>`;
 }
 function updateSchedulePrint(){ const el=$('#schedprint'); if(el) el.innerHTML='<h3>ตารางข้อมูลห้อง (Room Data Schedule)</h3>'+scheduleTableHTML(); }
 
@@ -1876,10 +1995,13 @@ function loadScaffold(){
   pushHistory();
   state.placed=[]; state.doors=[]; clearFlowSeq(); state.sel=null;
   const f=FORMS[state.form]; let x=0,y=0,rh=0, dropped=0;
-  const order=[...CORE_STORE, ...f.prod, 'ipc','primary_pack','secondary_pack',
-    'corridor','pal','mal','gowning',...(f.sterile?['gowning_d','gowning_c','gowning_b']:[]),
+  // ลำดับนี้จงใจให้ผังตัวอย่าง "ยังไม่ผ่าน GMP": พื้นที่ทั่วไป/สวัสดิการไปตกใต้แถวสายผลิต
+  // (เพื่อให้กฎ NO OUTSIDE IN และ ห้องน้ำ/โรงอาหาร ติดพื้นที่ผลิต เด้งขึ้นให้นิสิตแก้)
+  const order=[...CORE_STORE, ...f.prod, 'ipc','primary_pack','secondary_pack','eq_wash','eq_store','pkg_store',
+    'corridor','pal','mal','dedust','gowning',...(f.sterile?['gowning_d','gowning_c','gowning_b','degowning','laundry']:[]),
     ...(f.dedicated?[f.dedGroup+'_airlock']:[]),
-    'qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste'];
+    'change_room','toilet','canteen','office',
+    'qc_chem','qc_micro','qc_instr','retained','qc_receipt','qc_gown','ahu','water_sys','workshop','waste'];
   order.filter(id=>f.rooms.includes(id)).forEach(id=>{
     const r=ROOMS[id]; if(x+r.w>COLS){x=0;y+=rh;rh=0;}
     if(y+r.h>ROWS){ dropped++; return; }
@@ -1906,7 +2028,20 @@ $('#import').addEventListener('change',e=>{
     const idmap={};
     state.placed=(Array.isArray(d.placed)?d.placed:[])
       .filter(p=>p&&ROOMS[p.id]&&[p.x,p.y,p.w,p.h].every(n=>Number.isFinite(n)))
-      .map(p=>{ const nu=state.uid++; idmap[p.uid]=nu; return {id:p.id,x:p.x,y:p.y,w:p.w,h:p.h,uid:nu}; });
+      .map(p=>{ const nu=state.uid++; idmap[p.uid]=nu;
+        const r={id:p.id,x:p.x,y:p.y,w:p.w,h:p.h,uid:nu};
+        // คืนค่า “ข้อมูลห้อง” (HVAC/drain) กลับมาด้วย — ก่อนหน้านี้ import ทิ้ง env ทั้งหมด
+        if(p.env && typeof p.env==='object'){
+          const s=p.env, env={};
+          if(CLASS_OPTS.includes(s.cls)) env.cls=s.cls;
+          ['T','RH','dP','ach','lux'].forEach(k=>{ if(s[k]===''||Number.isFinite(+s[k])) env[k]=(s[k]===''?'':+s[k]); });
+          if(s.airflow==='UDAF'||s.airflow==='turbulent') env.airflow=s.airflow;
+          if(typeof s.ahu==='string') env.ahu=s.ahu;
+          if(s.dust!=null) env.dust=!!s.dust;
+          if(s.drain!=null) env.drain=!!s.drain;
+          if(Object.keys(env).length) r.env=env;
+        }
+        return r; });
     state.doors=(Array.isArray(d.doors)?d.doors:[])
       .filter(dr=>dr&&idmap[dr.room]!=null&&['top','bottom','left','right'].includes(dr.side))
       .map(dr=>({uid:state.uid++,room:idmap[dr.room],side:dr.side,frac:Number.isFinite(dr.frac)?dr.frac:.5,swing:[0,1,2,3].includes(dr.swing)?dr.swing:0,interlock:!!dr.interlock}));

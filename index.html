@@ -838,6 +838,8 @@ const ROOMS = {
   rejected:    {th:'ของไม่ผ่าน/รอทำลาย', en:'Rejected', z:'store', w:2,h:2},
   dispensing:  {th:'ชั่ง/จ่ายวัตถุดิบ', en:'Dispensing', z:'grey', w:3,h:2},
   fg_store:    {th:'คลังยาสำเร็จรูป', en:'FG store', z:'store', w:3,h:2},
+  pkg_store:   {th:'คลังวัสดุบรรจุ/ฉลาก', en:'Packaging/label store', z:'store', w:2,h:2},
+  returned:    {th:'พื้นที่ของคืน/เรียกคืน', en:'Returned/Recalled', z:'store', w:2,h:2},
   // OSD
   granulation: {th:'แกรนูล', en:'Granulation', z:'grey', w:3,h:2},
   drying:      {th:'อบแห้ง', en:'Drying', z:'grey', w:2,h:2},
@@ -905,7 +907,7 @@ const ROOMS = {
 
 /* ---------- room → icon (sprite symbol id) ---------- */
 const RICON = {
-  receiving:'r-inbound', quarantine:'r-hold', sampling:'r-sampling', released:'r-check', rejected:'r-x', dispensing:'r-balance', fg_store:'r-store',
+  receiving:'r-inbound', quarantine:'r-hold', sampling:'r-sampling', released:'r-check', rejected:'r-x', dispensing:'r-balance', fg_store:'r-store', pkg_store:'r-pack', returned:'r-hold',
   granulation:'r-granule', drying:'r-dry', blending:'r-mix', compression:'r-press', coating:'r-coat',
   sol_prep:'r-mix', fill_liquid:'r-bottle', mix_semi:'r-mix', fill_tube:'r-tube',
   comp_ster:'r-mix', filtration:'r-filter', fill_asept:'r-vial', fill_term:'r-vial', autoclave:'r-steriliser', lyo:'r-freeze', capping:'r-cap',
@@ -923,7 +925,7 @@ const ricon = id => RICON[id] || 'r-store';
 
 /* ---------- ชุดห้องต่อรูปแบบยา + ลำดับการผลิต ---------- */
 const CORE_STORE = ['receiving','quarantine','sampling','released','rejected','dispensing','fg_store'];
-const CORE_SUP = ['corridor','pal','mal','passbox','gowning','qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste','ipc','primary_pack','secondary_pack'];
+const CORE_SUP = ['corridor','pal','mal','passbox','gowning','qc_chem','qc_micro','qc_instr','retained','change_room','toilet','canteen','office','ahu','water_sys','workshop','waste','ipc','primary_pack','secondary_pack','pkg_store','returned'];
 
 const FORMS = {
   osd: {name:'ยาเม็ด/แคปซูล (OSD, non-sterile)', sterile:false,
@@ -1062,7 +1064,7 @@ function computeEnv(p){
     RH:  num(e.RH, base?base.RH:''),
     dP:  num(e.dP, roomPressure(p.id)),
     ach: num(e.ach, base?base.ach:''),
-    airflow: e.airflow || (g==='A'?'UDAF':'turbulent'),
+    airflow: e.airflow || ((e.cls==='A'||g==='A')?'UDAF':'turbulent'),   // เกรด A (ตามผังหรือที่ตั้ง class=A) → UDAF โดยปริยาย
     dust: e.dust!=null? !!e.dust : DUST.has(p.id),
     ahu: e.ahu || '',
     lux: num(e.lux, base?base.lux:''),
@@ -1145,6 +1147,30 @@ function buildRules(){
     run:()=> !has('waste')?{s:'na'}:
        (placedProd().some(pid=>adjIds('waste',pid))?{s:'warn',d:'พื้นที่ของเสียไม่ควรติดห้องผลิตโดยตรง',rooms:['waste']}:{s:'pass'})});
 
+  // (3) วัสดุบรรจุ/ฉลากที่พิมพ์แล้ว ต้องเก็บแยกและควบคุมการเบิกจ่าย กันหยิบผิด/ปนรุ่น
+  R.push({cl:'PIC/S 3.24 · วัสดุบรรจุ/ฉลาก', pr:'Safety', th:'มีคลังเก็บวัสดุบรรจุ/ฉลากที่พิมพ์แล้วแยกและควบคุม (กันฉลาก/วัสดุบรรจุปนรุ่น mix-up)',
+    run:()=> (!has('secondary_pack')&&!has('primary_pack'))?{s:'na'}:
+       (has('pkg_store')?{s:'pass'}:{s:'warn',d:'ควรมีคลังวัสดุบรรจุ/ฉลากแยกและควบคุมการเบิกจ่าย เพื่อกันฉลาก/วัสดุบรรจุปนรุ่น (mix-up)'})});
+
+  // (5) พื้นที่ของคืน/เรียกคืน ต้องแยกกันปนกับของที่ปล่อยผ่าน/สายผลิต
+  R.push({cl:'PIC/S 3.22 · ของคืน/เรียกคืน', pr:'Safety', th:'พื้นที่ของคืน/เรียกคืน แยกและกันจากคลังปล่อยผ่าน/ยาสำเร็จ/สายผลิต',
+    run:()=>{ if(!has('returned')) return {s:'na'};
+      const bad=[]; ['released','fg_store',...placedProd()].forEach(r=>{ if(has(r)&&adjIds('returned',r)) bad.push('returned',r); });
+      return bad.length?{s:'warn',d:'พื้นที่ของคืน/เรียกคืนติดคลังปล่อยผ่าน/ยาสำเร็จ/สายผลิตโดยตรง — ควรกันบริเวณ/แยกให้ชัด กันหยิบปน',rooms:[...new Set(bad)]}:{s:'pass'};}});
+
+  // (6) สุ่มตัวอย่างวัตถุดิบต้องทำในพื้นที่ควบคุม ไม่เปิดตรงสู่คลังทั่วไป/ภายนอก
+  R.push({cl:'PIC/S 3.22 · สุ่มตัวอย่าง', pr:'Safety', th:'ห้องสุ่มตัวอย่างวัตถุดิบอยู่ในพื้นที่ควบคุม ไม่เปิดตรงสู่คลังรับของ/ทั่วไป',
+    run:()=>{ if(!has('sampling')) return {s:'na'};
+      const bad=[]; ['receiving','secondary_pack','waste'].filter(has).forEach(r=>{ if(adjIds('sampling',r)) bad.push('sampling',r); });
+      return bad.length?{s:'warn',d:'ห้องสุ่มตัวอย่างไม่ควรเปิดตรงสู่พื้นที่รับของ/ทั่วไป — ควรอยู่ในพื้นที่ควบคุมหรือมีแอร์ล็อกคั่น',rooms:[...new Set(bad)]}:{s:'pass'};}});
+
+  // (8) ทางเดินที่ติดห้องสะอาด ควรกำหนดความดันสัมพัทธ์ให้ชัด (clean corridor / sink) ตาม cascade
+  R.push({cl:'ข้อ 360 / Annex 1 · ความดันทางเดิน', pr:'Safety', th:'ทางเดินที่ติดห้องสะอาด ควรกำหนดความดัน (ΔP) ให้ชัด เป็นทางเดินความดันบวก/ลบ ตาม cascade',
+    run:()=>{ const graded=state.placed.filter(p=>ROOMS[p.id]&&ROOMS[p.id].grade); if(!graded.length) return {s:'na'};
+      const cors=state.placed.filter(p=>p.id==='corridor' && graded.some(g=>touching(p,g))); if(!cors.length) return {s:'na'};
+      const undef=cors.filter(p=>{ const raw=p.env?p.env.dP:undefined; return raw===''||raw==null; });   // เตือนเฉพาะที่ยังไม่ได้ระบุค่า (ตั้ง 0 Pa เป็นทางเดินอ้างอิงก็ผ่าน)
+      return undef.length?{s:'warn',d:'ทางเดินที่ติดห้องสะอาดควรระบุความดัน (ΔP) ใน “ข้อมูลห้อง” ให้ชัด — เป็นทางเดินความดันบวก (clean corridor), ลบ (sink) หรือ 0 Pa (อ้างอิง) ก็ได้ แต่ต้องกำหนดตาม cascade',rooms:['corridor']}:{s:'pass'};}});
+
   // ---- Sterile ----
   if(f.sterile){
     R.push({cl:'ข้อ 358, 350 / Annex 1', pr:'Safety', th:'มีห้องเปลี่ยนชุดแบบขั้น (gowning cascade)',
@@ -1185,6 +1211,16 @@ function buildRules(){
     R.push({cl:'ข้อ 358 / Annex 1 · ทางออก/ถอดชุด', pr:'Smooth Flow', th:'มีทางออก/ถอดชุด (de-gowning) แยกจากทางเข้า ไม่ให้เส้นทางเข้า-ออกพื้นที่สะอาดสวนกัน',
       run:()=>{ const clean=[f.aseptic?'fill_asept':'fill_term','comp_ster','filtration'].filter(has); if(!clean.length) return {s:'na'};
         return has('degowning')?{s:'pass'}:{s:'warn',d:'เพิ่มห้องถอดชุด/ทางออก (De-gowning) แยกจาก gowning ขาเข้า เพื่อกันคนเข้า-ออกสวนทางกันในพื้นที่สะอาด'};}});
+
+    // (7) การผลิตปลอดเชื้อต้องมีระบบน้ำบริสุทธิ์ (PW/WFI) รองรับพื้นที่สะอาด
+    R.push({cl:'F-D3-81 ข้อ 19 · ระบบน้ำ', pr:'Safety', th:'สายปลอดเชื้อต้องมีระบบน้ำบริสุทธิ์ (PW/WFI) รองรับพื้นที่สะอาด',
+      run:()=> has('water_sys')?{s:'pass'}:{s:'warn',d:'การผลิตปลอดเชื้อต้องมีระบบน้ำบริสุทธิ์/น้ำสำหรับฉีด (PW/WFI) — เพิ่มห้องระบบน้ำ'}});
+
+    // (9) การปิดจุกขวดปลอดเชื้อ (capping) เป็นจุดวิกฤต ควรอยู่ใต้อากาศเกรด A (RABS/UDAF)
+    if(f.aseptic) R.push({cl:'ข้อ 310, 361 / Annex 1 · ปิดจุก (RABS)', pr:'Safety', th:'การปิดจุก (capping) ในกระบวนการปลอดเชื้อ ควรอยู่ภายใต้อากาศเกรด A (RABS/UDAF)',
+      run:()=>{ if(!has('capping')) return {s:'na'};
+        const bad=state.placed.some(p=>p.id==='capping' && computeEnv(p).airflow!=='UDAF');
+        return bad?{s:'warn',d:'ปิดจุกขวดปลอดเชื้อเป็นจุดวิกฤต ควรตั้งให้อยู่ใต้ UDAF/อากาศเกรด A (RABS) — ตั้ง airflow=UDAF ใน “ข้อมูลห้อง”'}:{s:'pass'};}});
   }
   // ---- β-lactam ----
   if(f.dedicated){
@@ -1395,7 +1431,7 @@ function renderSteps(){
 function renderPalette(){
   const box=$('#palette'); box.innerHTML='';
   const f=FORMS[state.form], steps=stepList(), cur=steps[state.step];
-  const groups={'Storage':CORE_STORE, 'Production':[...f.prod,'ipc','primary_pack','secondary_pack'],
+  const groups={'Storage':[...CORE_STORE,'pkg_store','returned'], 'Production':[...f.prod,'ipc','primary_pack','secondary_pack'],
     'Airlocks & flow':['corridor','pal','mal','passbox','gowning','gowning_d','gowning_c','gowning_b','degowning','bl_airlock','hm_airlock','cy_airlock'],
     'Quality control':['qc_chem','qc_micro','qc_instr','retained'],
     'Support & utilities':['change_room','toilet','canteen','office','ahu','water_sys','workshop','waste']};

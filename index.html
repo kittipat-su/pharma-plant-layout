@@ -170,6 +170,10 @@
   .floor.erasemode,.floor.erasemode .room{cursor:crosshair}
   .floor.erasemode .room:hover{border-color:var(--err)!important;background:#fdecea!important;box-shadow:0 0 0 3px rgba(216,68,61,.28),0 6px 16px -6px rgba(216,68,61,.45);z-index:6}
   .floor.erasemode .room .rsz{display:none}
+  /* ยางลบลบประตูได้: เปิดให้คลิกประตู + ไฮไลต์แดงตอนชี้ */
+  .floor.erasemode .door{cursor:pointer}
+  .floor.erasemode .door .doorhit{pointer-events:stroke}
+  .floor.erasemode .door:hover .doorhit{stroke:rgba(216,68,61,.42)!important}
   .hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
     color:var(--muted);font-size:14px;pointer-events:none;text-align:center;padding:28px;line-height:1.8;font-weight:500}
   .hint span{font-size:12px;opacity:.85}
@@ -719,7 +723,7 @@
     <span class="divider"></span>
     <button class="iconbtn" id="flowdraw" title="วาดเส้นทางการไหลเอง — คลิกห้องเรียงลำดับ" aria-label="วาดเส้นทางการไหล"><svg class="ico"><use href="#i-pen"/></svg></button>
     <button class="iconbtn" id="doormode" title="โหมดวางประตู: คลิกขอบห้องวางบานประตู · คลิกหมุนทิศเปิด · Alt+คลิก interlock · Shift+คลิกลบ" aria-label="วางประตู"><svg class="ico"><use href="#i-door"/></svg></button>
-    <button class="iconbtn" id="erasemode" title="โหมดยางลบ: คลิกห้องเพื่อลบทีละจุด (คลิกปุ่มอีกครั้งเพื่อออก)" aria-label="ยางลบ — คลิกห้องเพื่อลบ"><svg class="ico"><use href="#i-eraser"/></svg></button>
+    <button class="iconbtn" id="erasemode" title="โหมดยางลบ: คลิกห้องเพื่อลบห้อง · คลิกประตูเพื่อลบเฉพาะประตู (คลิกปุ่มอีกครั้งเพื่อออก)" aria-label="ยางลบ — คลิกห้อง/ประตูเพื่อลบ"><svg class="ico"><use href="#i-eraser"/></svg></button>
     <span class="divider"></span>
     <button class="iconbtn" id="rotate" title="หมุนห้องที่เลือก (R)" aria-label="หมุนห้อง"><svg class="ico"><use href="#i-rotate"/></svg></button>
     <button class="iconbtn" id="del" title="ลบห้องที่เลือก (Delete)" aria-label="ลบห้อง"><svg class="ico"><use href="#i-trash"/></svg></button>
@@ -1857,6 +1861,19 @@ function renderRules(){
 function pushHistory(){ state.history.push(JSON.stringify({placed:state.placed,doors:state.doors,flowSeq:state.flowSeq})); if(state.history.length>50) state.history.shift(); }
 function undo(){ if(!state.history.length) return; const s=JSON.parse(state.history.pop()); state.placed=s.placed||[]; state.doors=s.doors||[]; if(s.flowSeq) state.flowSeq=s.flowSeq; state.sel=null; evaluate(); drawFlows(); renderFlowbar(); }
 function refocus(uid){ const n=floor.querySelector('.room[data-uid="'+uid+'"]'); if(n) n.focus(); }
+// หาห้องที่คลิก/ใกล้จุดคลิกที่สุด (คลิกที่ขอบหรือเลยขอบเล็กน้อยก็ยังวางประตูได้) → คืนห้อง + พิกัดในห้อง (หน่วยช่อง)
+function roomNear(clientX, clientY, margin){
+  const frr=floor.getBoundingClientRect();
+  const gx=(clientX-frr.left)/(CELL*zoom), gy=(clientY-frr.top)/(CELL*zoom);
+  let best=null, bestD=Infinity;
+  for(const p of state.placed){
+    const cx=Math.max(p.x,Math.min(gx,p.x+p.w)), cy=Math.max(p.y,Math.min(gy,p.y+p.h));
+    const d=Math.hypot(gx-cx, gy-cy);
+    if(d<bestD-1e-9 || d<1e-9){ bestD=d; best=p; }   // ห้องที่คลุมจุด (d=0) ถือเป็นตัวบนสุด
+  }
+  if(!best || bestD>(margin==null?0.6:margin)) return null;
+  return {p:best, lx:gx-best.x, ly:gy-best.y};
+}
 function addDoorAt(p, lx, ly){
   const fx=Math.max(0,Math.min(1,lx/p.w)), fy=Math.max(0,Math.min(1,ly/p.h));
   const dT=fy, dB=1-fy, dL=fx, dR=1-fx, m=Math.min(dT,dB,dL,dR);
@@ -1898,8 +1915,10 @@ function rotateSel(){
 // drag (ย้าย) + resize (ปรับขนาด)
 let drag=null, resize=null;
 floor.addEventListener('pointerdown',e=>{
-  // โหมดยางลบ: คลิกห้อง = ลบห้องนั้นทันที (ลบทีละจุด)
+  // โหมดยางลบ: คลิกประตู = ลบเฉพาะประตูนั้น · คลิกห้อง = ลบห้อง (ลบทีละจุด)
   if(state.eraseMode){
+    const dg=e.target.closest('.door');
+    if(dg){ const id=+dg.dataset.door; pushHistory(); state.doors=state.doors.filter(d=>d.uid!==id); renderDoors(); return; }
     const rr=e.target.closest('.room'); if(!rr) return;
     deleteRoom(+rr.dataset.uid);
     return;
@@ -1912,10 +1931,9 @@ floor.addEventListener('pointerdown',e=>{
       else if(e.altKey){ const dd=state.doors.find(d=>d.uid===id); if(dd) dd.interlock=!dd.interlock; }
       else { const dd=state.doors.find(d=>d.uid===id); if(dd) dd.swing=((dd.swing||0)+1)%4; }
       renderDoors(); return; }
-    const rr=e.target.closest('.room'); if(!rr) return;   // คลิกในห้อง: วางประตูที่ขอบใกล้สุด
-    const pp=state.placed.find(x=>x.uid===+rr.dataset.uid); if(!pp) return;
-    const frr=floor.getBoundingClientRect();
-    addDoorAt(pp, (e.clientX-frr.left)/(CELL*zoom)-pp.x, (e.clientY-frr.top)/(CELL*zoom)-pp.y);
+    const near=roomNear(e.clientX, e.clientY);   // คลิกในห้อง/ที่ขอบ/เลยขอบเล็กน้อย: วางประตูที่ขอบใกล้สุดของห้องที่ใกล้ที่สุด
+    if(!near) return;
+    addDoorAt(near.p, near.lx, near.ly);
     return;
   }
   // โหมดวาดการไหล: คลิกห้องเรียงลำดับเข้าเส้นทาง (คลิกซ้ำห้องล่าสุด = ถอย)
